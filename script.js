@@ -230,50 +230,100 @@
     text(drawing, 154, 289, 'Local shard', { 'font-size': 8 });
     node('rect', { x: 271, y: 282, width: 8, height: 8, rx: 1, fill: '#e9dfd7' }, drawing);
     text(drawing, 287, 289, 'On other GPUs', { 'font-size': 8 });
-    $('#mesh-svg').setAttribute('aria-label', hybrid ? 'Hybrid sharding: two replicated groups of four GPU shards' : 'Fully sharded training: one model spread over eight GPU shards');
+    text(drawing, 260, 265, hybrid ? 'π0.5 MEASURED LAYOUT' : 'GR00T N1.7 MEASURED LAYOUT', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
+    $('#mesh-svg').setAttribute('aria-label', hybrid ? 'π0.5 measured layout: two replicated groups of four GPU shards' : 'GR00T N1.7 measured layout: one model spread over eight GPU shards');
     $('#mesh-caption').textContent = hybrid ? '4 shards × 2 replicas' : '8 shards × 1 replica';
-    $('#mesh-explanation').textContent = hybrid ? 'Each row holds one complete model, distributed across four GPUs. The two rows are replicas.' : 'All eight GPUs form one shard group. Each GPU owns one eighth of the sharded parameters and state.';
+    $('#mesh-explanation').textContent = hybrid ? 'π0.5 uses two replicas of four shards; MolmoAct2 uses four replicas of two shards. Tiles show shard ownership. Weights are gathered for computation.' : 'GR00T uses one group of eight shards. Tiles show ownership of sharded parameters and state. Weights are gathered for computation.';
   }
   const meshButtons = $$('[data-mesh]');
   meshButtons.forEach(button => button.addEventListener('click', () => { meshMode = button.dataset.mesh; activate(meshButtons, meshMode, 'mesh'); drawMesh(); }));
   drawMesh();
 
   const kernelDescriptions = [
-    'Tiles read normalized gradients and sum their squares, across all active parameter tensors.',
-    'Tile partials reduce to per-parameter sums. Shard groups then all-reduce these sums across GPUs.',
-    'One kernel derives the global gradient norm, clipping factor, and AdamW step scalars.',
-    'The update kernel normalizes and clips gradients, then updates weights and moment state together.'
+    'Tiles read original gradients, divide by microbatch accumulation × data-parallel ranks, and write squared-norm partials. The gradient buffers stay unchanged.',
+    'Tile partials reduce to one squared-norm sum per parameter. An all-reduce then sums these across the shard group, between launches 2 and 3.',
+    'One kernel combines all parameter norms into a global norm and one shared clipping factor, and prepares per-parameter AdamW step scalars.',
+    'The update kernel rereads original gradients, normalizes and clips them, and updates weights, moments, and step counters. Input gradient buffers stay unchanged.'
   ];
   function drawOptimizer() {
     const drawing = $('#optimizer-drawing');
     drawing.replaceChildren();
     const fused = optimizerMode === 'fused';
-    const names = fused ? ['Tile norms', 'Reduce', 'Clip factor', 'AdamW'] : ['Normalize', 'Norm', 'Clip', 'AdamW'];
-    text(drawing, 260, 31, fused ? 'SHARED LAUNCHES ACROSS DENSE TENSORS' : 'REPEATED OPERATIONS FOR EACH TENSOR', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
-    names.forEach((name, i) => text(drawing, 139 + i * 93, 65, name, { 'text-anchor': 'middle', 'font-size': 8 }));
-    for (let tensor = 0; tensor < 3; tensor++) {
-      text(drawing, 36, 104 + tensor * 45, `Tensor ${String.fromCharCode(65 + tensor)}`, { 'font-size': 8 });
-      node('path', { d: `M91 ${100 + tensor * 45}H461`, stroke: '#dec8b2', 'stroke-width': 1 }, drawing);
-      for (let step = 0; step < 4; step++) {
-        node('rect', { x: 112 + step * 93, y: 85 + tensor * 45, width: 55, height: 30, rx: 4, fill: fused && step === kernel ? '#dda197' : '#ead8cf', stroke: fused && step === kernel ? '#bd805e' : '#d6b9ac', class: 'optimizer-tile' }, drawing);
-        for (let tile = 0; tile < 3; tile++) node('rect', { x: 120 + step * 93 + tile * 13, y: 95 + tensor * 45, width: 8, height: 10, rx: 1, fill: '#fffaf1', opacity: .6 }, drawing);
-      }
-    }
+    const names = fused ? ['Tile norms', 'Reduce', 'Clip factor', 'AdamW'] : ['Norm', 'Global clip', 'Clip gradients', 'AdamW'];
+    const defs = node('defs', {}, drawing);
+    const marker = node('marker', { id: 'optimizer-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 4, markerHeight: 4, orient: 'auto-start-reverse' }, defs);
+    node('path', { d: 'M0 0 10 5 0 10Z', fill: '#ba9384' }, marker);
+    const connect = (d, attrs = {}) => node('path', { d, fill: 'none', stroke: '#cdb2a5', 'stroke-width': 1.1, 'marker-end': 'url(#optimizer-arrow)', ...attrs }, drawing);
+    const box = (x, y, width, height, step, attrs = {}) => node('rect', { x, y, width, height, rx: 4, fill: step === kernel ? '#dda197' : '#ead8cf', stroke: step === kernel ? '#bd8075' : '#d6b9ac', class: 'optimizer-tile', ...attrs }, drawing);
+    text(drawing, 260, 30, fused ? 'FOUR SHARED TRITON LAUNCHES' : 'CONCEPTUAL PER-TENSOR UPDATE', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
     if (fused) {
-      for (let tensor = 0; tensor < 3; tensor++) node('circle', { cx: 91, cy: 100 + tensor * 45, r: 2.2, fill: '#b97269', class: 'optimizer-signal', style: `animation-delay:-${tensor * 1.1}s` }, drawing);
-      names.forEach((name, step) => {
-        node('rect', { x: 105 + step * 93, y: 78, width: 69, height: 135, rx: 7, fill: 'none', stroke: step === kernel ? '#b47b56' : '#c9a581', 'stroke-width': step === kernel ? 1.6 : 1, 'stroke-dasharray': '3 4', class: 'optimizer-tile' }, drawing);
-        text(drawing, 139 + step * 93, 231, `${step + 1} launch`, { 'text-anchor': 'middle', 'font-size': 7 });
+      const columns = [135, 226, 336, 450];
+      const regions = [[96, 78], [190, 72], [304, 66], [410, 80]];
+      names.forEach((name, step) => text(drawing, columns[step], 64, name, { 'text-anchor': 'middle', 'font-size': 8 }));
+      text(drawing, 49, 64, 'Gradients', { 'text-anchor': 'middle', 'font-size': 8 });
+      node('rect', { x: 20, y: 83, width: 58, height: 148, rx: 6, fill: '#f1e7df', stroke: '#d8c4b6', id: 'optimizer-raw-gradients' }, drawing);
+      // Norm statistics flow to one global factor. They are not updated gradients.
+      for (let tensor = 0; tensor < 3; tensor++) {
+        const y = 117 + tensor * 45;
+        text(drawing, 34, y + 3, String.fromCharCode(65 + tensor), { 'font-size': 8 });
+        for (let tile = 0; tile < 3; tile++) node('rect', { x: 45 + tile * 7, y: y - 8, width: 4, height: 16, rx: 1, fill: '#c9b6a6' }, drawing);
+        connect(`M78 ${y}H107`);
+        box(108, y - 13, 54, 26, 0);
+        for (let tile = 0; tile < 3; tile++) node('rect', { x: 117 + tile * 13, y: y - 5, width: 8, height: 10, rx: 1, fill: '#fffaf5', opacity: .7 }, drawing);
+        connect(`M162 ${y}H205`);
+        box(205, y - 10, 42, 20, 1);
+        text(drawing, 226, y + 3, 'sum', { 'text-anchor': 'middle', 'font-size': 7 });
+        connect(`M247 ${y}H279`, { 'marker-end': 'none' });
+        box(422, y - 13, 56, 26, 3);
+        text(drawing, 450, y - 1, 'weights', { 'text-anchor': 'middle', 'font-size': 7 });
+        text(drawing, 450, y + 8, '+ moments', { 'text-anchor': 'middle', 'font-size': 6 });
+        connect(`M396 ${y}H422`);
+        node('circle', { cx: 78, cy: y, r: 2.2, fill: '#b97269', class: 'optimizer-signal', style: `animation-delay:-${tensor * 1.1}s` }, drawing);
+      }
+      connect('M279 117V244H265V267');
+      node('rect', { x: 220, y: 267, width: 139, height: 27, rx: 5, fill: '#f8f0e9', stroke: '#c4a08e', 'stroke-dasharray': '3 3', id: 'optimizer-shard-reduction' }, drawing);
+      text(drawing, 289, 284, 'Shard-axis all-reduce', { 'text-anchor': 'middle', 'font-size': 8 });
+      connect('M336 267V193');
+      box(309, 129, 56, 64, 2, { id: 'optimizer-global-clip' });
+      text(drawing, 337, 146, 'Global norm', { 'text-anchor': 'middle', 'font-size': 7 });
+      text(drawing, 337, 164, 'One clip', { 'text-anchor': 'middle', 'font-size': 9 });
+      text(drawing, 337, 177, 'factor', { 'text-anchor': 'middle', 'font-size': 9 });
+      box(309, 209, 56, 20, 2);
+      text(drawing, 337, 222, 'Step scalars', { 'text-anchor': 'middle', 'font-size': 7 });
+      connect('M365 161H396', { 'marker-end': 'none' });
+      connect('M365 219H396V117', { 'marker-end': 'none', 'stroke-dasharray': '2 3' });
+      connect('M396 117V207', { 'marker-end': 'none' });
+      // dense_adam reads the original gradient buffers again, not the norm sums.
+      connect('M49 231V317H450V239', { stroke: '#a89c90', id: 'optimizer-gradient-reread' });
+      text(drawing, 249, 309, 'Original gradients read again by the update', { 'text-anchor': 'middle', 'font-size': 8 });
+      regions.forEach(([x, width], step) => {
+        node('rect', { x, y: 83, width, height: 156, rx: 7, fill: 'none', stroke: step === kernel ? '#b47b70' : '#c9a59a', 'stroke-width': step === kernel ? 1.6 : 1, 'stroke-dasharray': '3 4', class: 'optimizer-tile' }, drawing);
+        text(drawing, columns[step], 252, `${step + 1} launch`, { 'text-anchor': 'middle', 'font-size': 7 });
       });
-      node('path', { d: 'M281 218v27h-47', fill: 'none', stroke: '#b89978', 'stroke-dasharray': '2 3' }, drawing);
-      text(drawing, 260, 265, 'Shard-axis norm reduction between launches 2 and 3', { 'text-anchor': 'middle', 'font-size': 7 });
+      text(drawing, 260, 343, 'One shared clip factor; original gradient buffers are unchanged.', { 'text-anchor': 'middle', 'font-size': 8 });
     } else {
-      text(drawing, 260, 243, 'Multiple tensor-level operations and intermediate writes', { 'text-anchor': 'middle', 'font-size': 9 });
-      text(drawing, 260, 266, 'Conceptual baseline; exact fusion depends on the upstream trainer', { 'text-anchor': 'middle', 'font-size': 7 });
+      const columns = [130, 240, 350, 455];
+      names.forEach((name, step) => text(drawing, columns[step], 64, name, { 'text-anchor': 'middle', 'font-size': 8 }));
+      for (let tensor = 0; tensor < 3; tensor++) {
+        const y = 113 + tensor * 48;
+        text(drawing, 27, y + 4, `Tensor ${String.fromCharCode(65 + tensor)}`, { 'font-size': 8 });
+        box(105, y - 13, 50, 26, -1);
+        box(325, y - 13, 50, 26, -1);
+        box(430, y - 13, 50, 26, -1);
+        connect(`M155 ${y}H185`, { 'marker-end': 'none' });
+        connect(`M185 ${y}V161H213`);
+        connect(`M268 161H296V${y}H325`);
+        connect(`M375 ${y}H430`);
+      }
+      box(213, 129, 55, 64, -1);
+      text(drawing, 240, 154, 'One global', { 'text-anchor': 'middle', 'font-size': 8 });
+      text(drawing, 240, 169, 'clip factor', { 'text-anchor': 'middle', 'font-size': 8 });
+      text(drawing, 260, 276, 'Tensor-level norm, clipping, and parameter-update operations', { 'text-anchor': 'middle', 'font-size': 8 });
+      text(drawing, 260, 297, 'Conceptual baseline; exact launches depend on the upstream trainer', { 'text-anchor': 'middle', 'font-size': 7 });
     }
     $('.kernel-steps').hidden = !fused;
     $('.kernel-explanation').textContent = fused ? kernelDescriptions[kernel] : 'A conceptual per-tensor update repeats work across parameters. SomaSpeed coordinates dense tensors through four shared launches.';
-    $('#optimizer-svg').setAttribute('aria-label', fused ? `Four shared Triton launches. Selected launch ${kernel + 1}: ${names[kernel]}.` : 'Conceptual per-tensor baseline: normalization, gradient norm, clipping, and AdamW operations repeated for each parameter tensor.');
+    $('#optimizer-svg').setAttribute('aria-label', fused ? `Four shared Triton launches. Squared norm partials reduce per parameter, then across shard GPUs, to one global clip factor. AdamW rereads original gradients and updates weights and moments. Selected launch ${kernel + 1}: ${names[kernel]}.` : 'Conceptual baseline: per-tensor norm statistics combine into one global clip factor, used by tensor-level clipping and AdamW updates.');
     activate($$('[data-kernel]'), String(kernel), 'kernel');
   }
   const optimizerButtons = $$('[data-optimizer]');
@@ -308,7 +358,7 @@
     } else {
       text(drawing, 292, 320, 'Online softmax combines streamed tiles', { 'text-anchor': 'middle', 'font-size': 8 });
     }
-    $('.attention-explanation').textContent = backward ? 'Both streams contribute to action-query gradients (dQ). K/V gradients are computed only for trainable action tokens.' : 'Action queries read two K/V streams, tile by tile. Prefix queries only attend to the frozen prefix.';
+    $('.attention-explanation').textContent = backward ? 'The query-gradient kernel reads both K/V streams for dQ. A separate kernel computes dK and dV only for trainable action tokens; frozen prefix K/V receive no gradients.' : 'Action queries read prefix then action K/V streams, tile by tile, sharing one online-softmax accumulator. Prefix queries attend only to the prefix. Both token blocks are bidirectional.';
     $('#attention-svg').setAttribute('aria-label', backward ? 'Backward: prefix queries are frozen. Action-query gradients use both streams. Key and value gradients are computed only for trainable action tokens.' : 'Forward: frozen prefix queries read prefix keys; action queries read both frozen prefix and trainable action keys.');
   }
   const attentionButtons = $$('[data-attention]');

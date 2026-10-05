@@ -15,3 +15,7 @@ The motion button pauses diagram animations. Reduced-motion preferences are resp
 Local browser-check dependencies live in `.venv/`; downloaded browsers, caches, and screenshots stay inside this directory. These are ignored by `.gitignore` and are not website assets.
 
 For GitHub Pages, use **Deploy from a branch**, with `main` and `/ (root)` as the source. The included `.nojekyll` file serves the static assets without Jekyll processing.
+
+The method diagrams were audited against SomaSpeed commit `01487e19c93a315faf6fb0157be35cde067d6e03`, specifically `parallel.py`, `dense.py`, `dense_kernels.py`, `attention.py`, `attention_kernels.py`, the model adapters, and the measured TOML configurations. The optimizer diagram separates squared-norm statistics from the original-gradient read during updates, shows a single global clipping factor, and places shard-axis all-reduce between launches 2 and 3. The attention map represents bidirectional token access in intermediate layers, with a note covering padding and the final prefix-layer shortcut. The mesh represents shard ownership, rather than physical interconnects or transient gathered weights.
+
+The existing `tests.test_dense` and `tests.test_attention` suites passed all 11 checks using Triton's CPU interpreter, including raw-gradient preservation, sharded norm reduction, optimizer-state parity, split-stream attention gradients, and π0.5 loss/gradient parity. This is a bounded correctness check, not a new GPU throughput benchmark.
