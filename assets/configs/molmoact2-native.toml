@@ -1,0 +1,38 @@
+# Eight-GPU tuned example: native.
+output = "artifacts/molmoact2-native"
+
+[model]
+name = "molmoact2"
+path = "data/models/MolmoAct2"
+dataset = "data/libero_molmo"
+full_finetune = false
+num_flow_timesteps = 8
+image_augmentation = true
+scheduler_decay_lr = 1e-06
+
+[parallel]
+dp_replicate = 1
+dp_shard = 8
+ac = "full"
+reshard = "default"
+retain_frozen = false
+skip_unused_logits = true
+structured_attention = false
+
+[training]
+steps = 10000
+microbatch = 32
+global_batch = 256
+workers = 4
+preprocess_in_workers = false
+seed = 42
+lr = 5e-05
+weight_decay = 0.0
+betas = [0.9, 0.95]
+eps = 1e-06
+warmup_steps = 200
+clip_grad = 1.0
+precision = "bfloat16"
+optimizer = "for-loop"
+warmup_measurement = 5
+max_seconds = 7080

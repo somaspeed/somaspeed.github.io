@@ -1,0 +1,429 @@
+{
+  "hardware": {
+    "gpus": 8,
+    "gpu": "NVIDIA A40",
+    "memory_mib_per_gpu": 46068,
+    "single_node": true,
+    "allocated_cpu_threads": 48,
+    "allocated_host_memory_gib": 240
+  },
+  "measurement": {
+    "phase_order": [
+      "native",
+      "somaspeed"
+    ],
+    "same_gpus_within_each_comparison": true,
+    "phase_budget_seconds": 7080,
+    "budget_includes_setup": true,
+    "discard_first_updates": 5,
+    "aggregation": "sum(global_batch) / sum(max_rank_step_seconds), after warmup",
+    "scope": "action-expert fine-tuning on LIBERO Spatial; throughput only; batches and pi05 parameter storage/compilation differ"
+  },
+  "comparisons": [
+    {
+      "model": "molmoact2",
+      "world_size": 8,
+      "native": {
+        "config": "configs/molmoact2/native.toml",
+        "backend": "native-molmoact2-lerobot-accelerate",
+        "microbatch_per_gpu": 32,
+        "global_batch": 256,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 132,
+          "target_steps": 10000,
+          "setup_seconds": 119.39462134428322,
+          "setup_peak_allocated_gib": 11.276875495910645,
+          "wall_seconds": 7081.674646948464,
+          "samples_per_second_end_to_end": 4.771752683464663,
+          "samples_per_second_steady": 4.864916988734362,
+          "measured_steps": 127,
+          "bounded_early_stop": true,
+          "stop_reason": "time_limit"
+        },
+        "finite_loss_updates": 132,
+        "measured_samples": 32512,
+        "measured_seconds": 6682.9506187438965,
+        "peak_allocated_gib": 19.819168090820312
+      },
+      "somaspeed": {
+        "config": "configs/molmoact2/somaspeed.toml",
+        "backend": "somaspeed",
+        "microbatch_per_gpu": 24,
+        "global_batch": 192,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 1631,
+          "target_steps": 10000,
+          "setup_seconds": 161.24473098758608,
+          "wall_seconds": 7083.575869507156,
+          "setup_peak_allocated_gib": 10.151151657104492,
+          "samples_per_second_end_to_end": 44.20818041182182,
+          "samples_per_second_steady": 45.28448036138989,
+          "measured_steps": 1626,
+          "bounded_early_stop": true
+        },
+        "finite_loss_updates": 1631,
+        "measured_samples": 312192,
+        "measured_seconds": 6894.017498016357,
+        "peak_allocated_gib": 39.70592498779297
+      },
+      "driver_version": "580.178.04",
+      "gpu_links": [
+        [
+          "X",
+          "NODE",
+          "NODE",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "X",
+          "NODE",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "NODE",
+          "X",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "NODE",
+          "NODE",
+          "X",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "X",
+          "NODE",
+          "NODE",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "X",
+          "NODE",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "NODE",
+          "X",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "NODE",
+          "NODE",
+          "X"
+        ]
+      ],
+      "parameters": 5442196208,
+      "trainable_parameters": 577564448,
+      "speedup": 9.308376785514469
+    },
+    {
+      "model": "groot",
+      "world_size": 8,
+      "native": {
+        "config": "configs/groot/native.toml",
+        "backend": "native-gr00t-hf-trainer-zero2",
+        "microbatch_per_gpu": 80,
+        "global_batch": 640,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 922,
+          "target_steps": 20000,
+          "setup_seconds": 169.6469647740014,
+          "setup_peak_allocated_gib": 7.365418910980225,
+          "wall_seconds": 7086.890956677002,
+          "samples_per_second_end_to_end": 83.26359240000001,
+          "samples_per_second_steady": 86.53746490731848,
+          "measured_steps": 917,
+          "bounded_early_stop": true,
+          "stop_reason": "time_limit"
+        },
+        "finite_loss_updates": 922,
+        "measured_samples": 586880,
+        "measured_seconds": 6781.802547931671,
+        "peak_allocated_gib": 21.063190460205078
+      },
+      "somaspeed": {
+        "config": "configs/groot/somaspeed.toml",
+        "backend": "somaspeed",
+        "microbatch_per_gpu": 640,
+        "global_batch": 5120,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 321,
+          "target_steps": 20000,
+          "setup_seconds": 134.88457993799238,
+          "wall_seconds": 7099.734589589003,
+          "setup_peak_allocated_gib": 4.266361713409424,
+          "samples_per_second_end_to_end": 231.49034365454241,
+          "samples_per_second_steady": 240.5713279256343,
+          "measured_steps": 316,
+          "bounded_early_stop": true
+        },
+        "finite_loss_updates": 321,
+        "measured_samples": 1617920,
+        "measured_seconds": 6725.3234786987305,
+        "peak_allocated_gib": 32.61794662475586
+      },
+      "driver_version": "595.84",
+      "gpu_links": [
+        [
+          "X",
+          "NODE",
+          "NODE",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "X",
+          "NODE",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "NODE",
+          "X",
+          "NODE",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NODE",
+          "NODE",
+          "NODE",
+          "X",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "X",
+          "NODE",
+          "NODE",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "X",
+          "NODE",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "NODE",
+          "X",
+          "NODE"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NODE",
+          "NODE",
+          "NODE",
+          "X"
+        ]
+      ],
+      "parameters": 3144016000,
+      "trainable_parameters": 1620515968,
+      "speedup": 2.7799673607643336
+    },
+    {
+      "model": "pi05",
+      "world_size": 8,
+      "native": {
+        "config": "configs/pi05/native.toml",
+        "backend": "native-pi05-lerobot-accelerate",
+        "microbatch_per_gpu": 8,
+        "global_batch": 64,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 4343,
+          "target_steps": 30000,
+          "setup_seconds": 282.5936000533402,
+          "setup_peak_allocated_gib": 10.224161148071289,
+          "wall_seconds": 7080.167951642536,
+          "samples_per_second_end_to_end": 39.25782578865486,
+          "samples_per_second_steady": 44.79680292087416,
+          "measured_steps": 4338,
+          "bounded_early_stop": true,
+          "stop_reason": "time_limit"
+        },
+        "finite_loss_updates": 4343,
+        "measured_samples": 277632,
+        "measured_seconds": 6197.585137724876,
+        "peak_allocated_gib": 28.186647415161133
+      },
+      "somaspeed": {
+        "config": "configs/pi05/somaspeed.toml",
+        "backend": "somaspeed",
+        "microbatch_per_gpu": 128,
+        "global_batch": 1024,
+        "gradient_accumulation": 1,
+        "summary": {
+          "completed_steps": 722,
+          "target_steps": 30000,
+          "setup_seconds": 259.18609184771776,
+          "wall_seconds": 7082.524795444682,
+          "setup_peak_allocated_gib": 10.167750358581543,
+          "samples_per_second_end_to_end": 104.38763313268156,
+          "samples_per_second_steady": 108.53553775184172,
+          "measured_steps": 717,
+          "bounded_early_stop": true
+        },
+        "finite_loss_updates": 722,
+        "measured_samples": 734208,
+        "measured_seconds": 6764.678327560425,
+        "peak_allocated_gib": 37.32275390625
+      },
+      "driver_version": "580.178.04",
+      "gpu_links": [
+        [
+          "X",
+          "NV4",
+          "PXB",
+          "PXB",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "NV4",
+          "X",
+          "PXB",
+          "PXB",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "PXB",
+          "PXB",
+          "X",
+          "NV4",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "PXB",
+          "PXB",
+          "NV4",
+          "X",
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "X",
+          "NV4",
+          "PXB",
+          "PXB"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "NV4",
+          "X",
+          "PXB",
+          "PXB"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "PXB",
+          "PXB",
+          "X",
+          "NV4"
+        ],
+        [
+          "SYS",
+          "SYS",
+          "SYS",
+          "SYS",
+          "PXB",
+          "PXB",
+          "NV4",
+          "X"
+        ]
+      ],
+      "parameters": 4143404816,
+      "trainable_parameters": 693422112,
+      "speedup": 2.4228411555072595
+    }
+  ]
+}

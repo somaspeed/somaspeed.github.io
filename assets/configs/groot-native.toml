@@ -1,0 +1,40 @@
+# Eight-GPU tuned example: native.
+output = "artifacts/groot-native"
+
+[model]
+name = "groot"
+path = "data/models/GR00T-N1.7-3B"
+backbone = "data/models/Cosmos-Reason2-2B"
+dataset = "data/libero_groot"
+full_finetune = false
+shard_size = 1024
+num_shards_per_epoch = 100000
+state_dropout = 0.2
+color_jitter = {"brightness" = 0.3, "contrast" = 0.4, "saturation" = 0.5, "hue" = 0.08}
+
+[parallel]
+dp_replicate = 1
+dp_shard = 8
+ac = "none"
+reshard = "default"
+retain_frozen = false
+skip_unused_logits = true
+structured_attention = false
+
+[training]
+steps = 20000
+microbatch = 80
+global_batch = 640
+workers = 4
+preprocess_in_workers = false
+seed = 42
+lr = 0.0001
+weight_decay = 1e-05
+betas = [0.9, 0.999]
+eps = 1e-08
+warmup_steps = 1000
+clip_grad = 1.0
+precision = "bfloat16"
+optimizer = "for-loop"
+warmup_measurement = 5
+max_seconds = 7080

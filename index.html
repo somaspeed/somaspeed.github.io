@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf8f4">
+  <meta name="description" content="SomaSpeed accelerates robot foundation model training with FSDP2, fused Triton optimizer kernels, and frozen-prefix attention. Explore measured speedups up to 9.31×.">
+  <meta property="og:title" content="SomaSpeed — Robot learning, at a different pace.">
+  <meta property="og:description" content="Up to 9.31× training throughput. A shared, high-performance trainer for MolmoAct2, GR00T N1.7, and π0.5.">
+  <meta property="og:type" content="website">
+  <title>SomaSpeed — Robot learning, at a different pace.</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="SomaSpeed home"><img src="assets/logo.svg" width="34" height="34" alt=""><span>soma<span class="brand-light">speed</span></span></a>
+    <nav aria-label="Main navigation">
+      <a href="#results">Results</a><a href="#method">Method</a><a href="#next">What’s next</a>
+    </nav>
+    <div class="header-actions">
+      <button class="motion-toggle icon-button" aria-label="Pause animations" aria-pressed="false" title="Pause animations"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="pause-icon" d="M7 5v10m6-10v10"/><path class="play-icon" d="m7 5 8 5-8 5Z"/></svg></button>
+      <a class="repository-link" href="https://github.com/kja7/somaspeed" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero section-shell" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot"></span> A FASTER PATH TO EMBODIED INTELLIGENCE</p>
+        <h1 id="hero-title">Robot learning,<br><em>at a different pace.</em></h1>
+        <p class="hero-description">High-performance training for robot foundation models.<br>Less overhead. More room to learn.</p>
+        <div class="hero-actions"><a class="button button-primary" href="#results">Explore the results <span aria-hidden="true">↓</span></a><a class="button button-text" href="https://github.com/kja7/somaspeed" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18c-4 1-4-2-6-2m12 5v-4a3 3 0 0 0-1-2c3 0 6-2 6-5a4 4 0 0 0-1-3 4 4 0 0 0 0-3s-2 0-4 2a12 12 0 0 0-6 0C7 4 5 4 5 4a4 4 0 0 0 0 3 4 4 0 0 0-1 3c0 3 3 5 6 5a3 3 0 0 0-1 2v4"/></svg> View the code <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="teaser reveal" aria-label="Animated conceptual illustration of observations flowing through eight training GPUs into a robot action">
+        <div class="teaser-topline"><span><span class="live-dot"></span> OBSERVE. LEARN. ACT.</span><span class="teaser-caption">A shared runtime. A smoother flow.</span></div>
+        <svg class="teaser-svg" viewBox="0 0 1120 350" role="img" aria-labelledby="teaser-title teaser-desc">
+          <title id="teaser-title">From observation to action</title><desc id="teaser-desc">Vision and language observations flow to an eight-GPU training grid, then to a moving robot arm. This is a conceptual illustration, not a measured robot rollout.</desc>
+          <defs>
+            <linearGradient id="stream-gradient"><stop stop-color="#e2c4bc"/><stop offset=".5" stop-color="#cf8c85"/><stop offset="1" stop-color="#e2c4bc"/></linearGradient>
+            <pattern id="teaser-grid" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".65" fill="#d8c8bf"/></pattern>
+            <filter id="paper-shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#88736c" flood-opacity=".07"/></filter>
+          </defs>
+          <rect x="0" y="0" width="1120" height="350" fill="url(#teaser-grid)" opacity=".5"/>
+          <g class="stream-lines" fill="none" stroke="url(#stream-gradient)" stroke-width="1.3">
+            <path id="stream-a" d="M281 106C360 106 365 136 434 136"/><path id="stream-b" d="M281 168C350 168 365 175 434 175"/><path id="stream-c" d="M281 237C356 237 364 214 434 214"/>
+            <path id="stream-d" d="M684 136C747 136 736 175 796 175"/><path id="stream-e" d="M684 175C737 175 743 175 796 175"/><path id="stream-f" d="M684 214C747 214 736 175 796 175"/>
+          </g>
+          <g id="stream-particles" aria-hidden="true"></g>
+          <g class="observation-art" filter="url(#paper-shadow)">
+            <rect x="78" y="58" width="212" height="178" rx="12" fill="#eee5dd" transform="rotate(-8 184 147)"/>
+            <rect x="74" y="52" width="212" height="178" rx="12" fill="#fffdfa" stroke="#e4d9cf" transform="rotate(3 180 141)"/>
+            <g transform="translate(87 65) rotate(3 92 70)">
+              <rect width="185" height="126" rx="7" fill="#f5eee7"/>
+              <path d="M0 92 94 58l91 34M94 58v68M0 92h185" stroke="#ddd0c4" stroke-width="1" fill="none"/>
+              <ellipse cx="100" cy="95" rx="24" ry="7" fill="#d9c7bb" opacity=".25"/>
+              <path d="m85 73 15-9 15 9v20l-15 9-15-9Z" fill="#dfa39a"/><path d="m85 73 15 9 15-9M100 82v20" fill="none" stroke="#c58077"/>
+              <g fill="none" stroke="#b5a79c" stroke-linecap="round"><path d="M38 100V71l27-32 18 16" stroke-width="9"/><path d="m78 51 11 10m-4-5 8-5m-8 5-4 8" stroke-width="3"/></g>
+              <circle cx="65" cy="39" r="6" fill="#f8f3ed" stroke="#b5a79c" stroke-width="2"/>
+              <path d="M10 18v-7h7m151 0h7v7M10 108v7h7m151 0h7v-7" stroke="#c78e83" fill="none" stroke-width="1.5"/>
+              <circle cx="165" cy="22" r="3" fill="#c78e83"/>
+              <text x="2" y="148" class="svg-small">vision / spatial context</text>
+            </g>
+            <rect x="93" y="220" width="217" height="41" rx="20.5" fill="#fffdfa" stroke="#e1d3c9"/>
+            <path d="M109 234h13m-13 5h9m-9 5h11" stroke="#bc8b80" stroke-width="1.3"/>
+            <text x="132" y="245" class="svg-prompt">“place the block”</text>
+          </g>
+          <g class="teaser-engine">
+            <rect x="434" y="70" width="250" height="210" rx="20" fill="#fcf8f4" stroke="#decbc1"/>
+            <path d="M455 106h208" stroke="#e6d8d0"/>
+            <text x="454" y="93" class="svg-brand">somaspeed</text><circle cx="661" cy="88" r="3" fill="#c38378"/>
+            <g id="hero-gpus"></g>
+            <text x="559" y="259" text-anchor="middle" class="svg-small">8 GPUs · one training flow</text>
+          </g>
+          <g class="robot-art">
+            <ellipse cx="918" cy="263" rx="112" ry="18" fill="#dcc9bd" opacity=".18"/>
+            <path d="m802 235 123-43 130 43-125 46Z" fill="#f6eee7" stroke="#ddcdc0"/><path d="M802 235v10l128 46 125-46v-10M930 281v10" stroke="#ddcdc0" fill="none"/>
+            <ellipse cx="870" cy="223" rx="22" ry="8" fill="#dfd0c4"/>
+            <path d="M850 219v-19q20-11 40 0v19q-20 11-40 0Z" fill="#eee4da" stroke="#bfae9f"/>
+            <g id="robot-trail" fill="none" stroke="#cf958b" opacity=".55"><path d="M906 130Q972 69 1018 178" stroke-dasharray="3 7"/></g>
+            <g id="robot-links" stroke-linecap="round"><path id="robot-arm-shadow" d="M870 201 893 121 963 137" stroke="#c8b7a7" stroke-width="18" fill="none"/><path id="robot-arm" d="M870 201 893 121 963 137" stroke="#fdf9f4" stroke-width="12" fill="none"/><circle cx="870" cy="201" r="12" fill="#f4ede5" stroke="#bda99a" stroke-width="2"/><circle id="robot-elbow" cx="893" cy="121" r="10" fill="#f4ede5" stroke="#bda99a" stroke-width="2"/><g id="robot-gripper"><circle r="7" fill="#e4b3a9" stroke="#bd8377"/><path d="M-6 5v13l5 4m7-17v13l-5 4" stroke="#b89385" stroke-width="3" fill="none"/></g></g>
+            <g id="robot-cube" transform="translate(992 208)"><path d="m-11-6 11-7 11 7v15L0 16l-11-7Z" fill="#dfa39a" stroke="#c58379"/><path d="M-11-6 0 1l11-7M0 1v15" stroke="#c58379" fill="none"/></g>
+            <path d="m979 212 22-8 22 8-22 8Z" stroke="#cb9c90" stroke-dasharray="3 3" fill="none"/>
+          </g>
+          <g class="teaser-stage-labels"><text x="190" y="318" text-anchor="middle">01 — OBSERVATION</text><text x="559" y="318" text-anchor="middle">02 — EFFICIENT TRAINING</text><text x="925" y="318" text-anchor="middle">03 — ACTION</text></g>
+        </svg>
+        <div class="teaser-bottomline"><span>Built around the way robot models learn.</span><span class="teaser-note">Conceptual illustration <span aria-hidden="true">↗</span></span></div>
+      </div>
+      <div class="supported-models reveal"><span>ONE TRAINER, THREE FOUNDATIONS</span><div><b>MolmoAct2</b><i aria-hidden="true"></i><b>GR00T <span>N1.7</span></b><i aria-hidden="true"></i><b class="pi-model">π<span>0.5</span></b></div></div>
+    </section>
+
+    <section class="results-section section-shell" id="results" aria-labelledby="results-title">
+      <div class="section-heading reveal"><p class="eyebrow section-index">01 / PERFORMANCE</p><div class="heading-row"><h2 id="results-title">The same hardware.<br><em>A different pace.</em></h2><p>More training samples, every second.<br>Expert fine-tuning on LIBERO Spatial,<br>measured on 8 × NVIDIA A40 GPUs.</p></div></div>
+      <div class="result-models reveal" role="tablist" aria-label="Select benchmark model">
+        <button class="result-model selected" id="tab-molmoact2" role="tab" aria-selected="true" aria-controls="benchmark-panel" data-model="molmoact2"><span class="model-tab-top">MolmoAct2 <span class="tab-arrow" aria-hidden="true">↗</span></span><span class="model-speed">9.31<span>×</span></span><span class="model-tab-bottom">higher training throughput</span></button>
+        <button class="result-model" id="tab-groot" role="tab" aria-selected="false" aria-controls="benchmark-panel" tabindex="-1" data-model="groot"><span class="model-tab-top">GR00T N1.7 <span class="tab-arrow" aria-hidden="true">↗</span></span><span class="model-speed">2.78<span>×</span></span><span class="model-tab-bottom">higher training throughput</span></button>
+        <button class="result-model" id="tab-pi05" role="tab" aria-selected="false" aria-controls="benchmark-panel" tabindex="-1" data-model="pi05"><span class="model-tab-top">π0.5 <span class="tab-arrow" aria-hidden="true">↗</span></span><span class="model-speed">2.42<span>×</span></span><span class="model-tab-bottom">higher training throughput</span></button>
+      </div>
+      <div class="benchmark-panel reveal" id="benchmark-panel" role="tabpanel" aria-labelledby="tab-molmoact2" tabindex="0">
+        <div class="chart-topline"><div><span class="chart-kicker">TRAINING THROUGHPUT</span><h3 id="chart-model-name">MolmoAct2</h3></div><div class="segmented-control chart-metric" role="group" aria-label="Chart metric"><button class="active" data-metric="throughput" aria-pressed="true">Samples / s</button><button data-metric="relative" aria-pressed="false">Relative speed</button></div></div>
+        <div class="chart" role="img" aria-label="MolmoAct2 throughput: native 4.86 samples per second; SomaSpeed 45.28 samples per second; 9.31 times faster.">
+          <div class="chart-grid" aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+          <div class="chart-row"><div class="bar-label">Native <span>Upstream trainer</span></div><div class="bar-track"><div class="chart-bar native-bar"><span class="bar-value">4.86</span></div></div></div>
+          <div class="chart-row"><div class="bar-label soma-label"><img src="assets/logo.svg" width="22" height="22" alt=""> SomaSpeed</div><div class="bar-track"><div class="chart-bar soma-bar"><span class="bar-value">45.28</span></div></div></div>
+          <div class="chart-axis" aria-hidden="true"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span><span>50</span></div>
+        </div>
+        <div class="chart-footer"><span><span class="legend-dot"></span> BF16 compute · 48 GB / GPU</span><span class="chart-summary" aria-live="polite">9.31× more samples per second</span></div>
+        <details class="benchmark-details"><summary><span>Inside the benchmark <span class="summary-aside">Configurations & measurement</span></span><span class="details-icon" aria-hidden="true">+</span></summary><div class="details-body"><div class="table-scroll"><table><caption class="sr-only">Configuration of the selected benchmark</caption><thead><tr><th scope="col">Configuration</th><th scope="col">Native</th><th scope="col">SomaSpeed</th></tr></thead><tbody id="config-table"><tr><th scope="row">Parallelism</th><td>LeRobot DDP</td><td>HSDP · 4 replicas × 2 shards</td></tr><tr><th scope="row">Batch per GPU</th><td>32</td><td>24</td></tr><tr><th scope="row">Global batch</th><td>256</td><td>192</td></tr><tr><th scope="row">Activation checkpointing</th><td>Full</td><td>None</td></tr><tr><th scope="row">Optimizer</th><td>Upstream AdamW</td><td>Dense fused AdamW</td></tr></tbody></table></div><p class="config-special" id="config-special">MolmoAct2 uses eight flow timesteps. SomaSpeed moves preprocessing to data-loader workers.</p><div class="measurement-note"><h4>How the numbers are measured</h4><p>Each native → SomaSpeed pair ran on the same node and GPUs, with a 7,080-second budget per run including setup. Steady-state throughput is total samples divided by the sum of the slowest-rank step times after five warmup updates.</p><p>Batches are tuned separately. GPU interconnects differ across model comparisons. These are throughput measurements; convergence and robot task success are not evaluated here.</p></div><div class="data-links"><a href="assets/results.json" download>Download measured results <span aria-hidden="true">↓</span></a><a id="native-config-link" href="assets/configs/molmoact2-native.toml" download>Native config <span aria-hidden="true">↓</span></a><a id="soma-config-link" href="assets/configs/molmoact2-somaspeed.toml" download>SomaSpeed config <span aria-hidden="true">↓</span></a></div></div></details>
+      </div>
+      <p class="results-footnote reveal">Tuned configurations, shared hardware within each pair. Batch sizes differ; speedup describes throughput, not time to convergence.</p>
+      <noscript><p>The chart shows MolmoAct2. GR00T N1.7: 86.54 → 240.57 samples/s (2.78×). π0.5: 44.80 → 108.54 samples/s (2.42×). Enable JavaScript to explore each model.</p></noscript>
+    </section>
+
+    <section class="method-section section-shell" id="method" aria-labelledby="method-title">
+      <div class="section-heading reveal"><p class="eyebrow section-index">02 / UNDER THE HOOD</p><div class="heading-row"><h2 id="method-title">Less work between<br><em>learning steps.</em></h2><p>A shared training system, with kernels<br>that understand what needs to learn<br>and what can stay still.</p></div></div>
+      <div class="architecture reveal" aria-label="Native model adapters preserve loading, preprocessing, loss and schedule, then connect to a shared SomaSpeed runtime">
+        <div class="adapter-models"><span>MolmoAct2</span><span>GR00T N1.7</span><span>π0.5</span></div><div class="architecture-connector" aria-hidden="true"><svg viewBox="0 0 70 140"><path d="M0 20C35 20 35 70 70 70M0 70h70M0 120C35 120 35 70 70 70"/></svg></div><div class="adapter-core"><span class="mini-eyebrow">NATIVE MODEL ADAPTERS</span><strong>Keep the model’s recipe.</strong><span>Loading · preprocessing · loss · schedule</span></div><div class="architecture-arrow" aria-hidden="true">→</div><div class="shared-core"><img src="assets/logo.svg" width="28" height="28" alt=""><div><span class="mini-eyebrow">SHARED SOMASPEED RUNTIME</span><strong>Accelerate the training loop.</strong></div></div>
+      </div>
+
+      <article class="method-row reveal" aria-labelledby="parallel-title">
+        <div class="method-copy"><span class="method-number">01</span><p class="eyebrow method-eyebrow">DISTRIBUTED TRAINING</p><h3 id="parallel-title">Make room.<br><em>Share the work.</em></h3><p>PyTorch FSDP2 spreads model parameters, gradients, and optimizer state across GPUs. HSDP adds another axis: replicate a group of shards to balance memory and communication.</p><p>Choose the mesh and checkpointing for each model. Retaining frozen weights can avoid repeated gathers, trading memory for less communication.</p><div class="method-tags"><span>PyTorch FSDP2</span><span>Hybrid sharding</span></div></div>
+        <div class="method-visual parallel-visual"><div class="visual-topline"><span>THE GPU MESH</span><div class="segmented-control" role="group" aria-label="GPU sharding layout"><button data-mesh="fsdp" aria-pressed="false">Shard</button><button class="active" data-mesh="hsdp" aria-pressed="true">Shard + replicate</button></div></div><svg id="mesh-svg" viewBox="0 0 520 305" role="img" aria-label="Hybrid sharding: two replicated groups of four GPU shards"><g id="mesh-drawing"></g></svg><div class="visual-bottomline"><span id="mesh-caption">4 shards × 2 replicas</span><span>8 GPUs</span></div><p class="diagram-caption" id="mesh-explanation">Each row holds one complete model, distributed across four GPUs. The two rows are replicas.</p></div>
+      </article>
+
+      <article class="method-row method-row-reversed reveal" aria-labelledby="optimizer-title">
+        <div class="method-copy"><span class="method-number">02</span><p class="eyebrow method-eyebrow">FUSED DENSE OPTIMIZATION</p><h3 id="optimizer-title">Small operations.<br><em>One coordinated flow.</em></h3><p>Ordinary dense gradients share a tile table, so work across tensors runs through four Triton launches. Normalized norms are reduced, a global clip factor is computed, and normalization, clipping, and AdamW updates are fused together.</p><p>Norm sums synchronize along the shard axis. Replicas already share gradients, so they aren’t counted twice. Native AdamW groups, state, and schedules are preserved.</p><div class="method-tags"><span>4 shared launches</span><span>Triton kernels</span></div></div>
+        <div class="method-visual optimizer-visual"><div class="visual-topline"><span>THE OPTIMIZER STEP</span><div class="segmented-control" role="group" aria-label="Optimizer visualization"><button data-optimizer="native" aria-pressed="false">Per tensor</button><button class="active" data-optimizer="fused" aria-pressed="true">SomaSpeed</button></div></div><svg id="optimizer-svg" viewBox="0 0 520 290" role="img" aria-label="Four shared Triton launches: tile norms, reduction, clipping factor, and fused AdamW update"><g id="optimizer-drawing"></g></svg><div class="kernel-steps" role="group" aria-label="Explore the four kernels"><button class="active" data-kernel="0" aria-pressed="true"><span>1</span> Tile norms</button><button data-kernel="1" aria-pressed="false"><span>2</span> Reduce</button><button data-kernel="2" aria-pressed="false"><span>3</span> Clip factor</button><button data-kernel="3" aria-pressed="false"><span>4</span> Update</button></div><p class="diagram-caption kernel-explanation" aria-live="polite">Tiles read normalized gradients and sum their squares, across all active parameter tensors.</p></div>
+      </article>
+
+      <article class="method-row attention-row reveal" aria-labelledby="attention-title">
+        <div class="method-copy"><span class="method-number">03</span><p class="eyebrow method-eyebrow">FROZEN-PREFIX ATTENTION · π0.5</p><h3 id="attention-title">Keep the context.<br><em>Train the action.</em></h3><p>The vision-language prefix stays frozen while the action expert learns. A custom attention kernel reads prefix and action keys and values as separate streams, using tiled online softmax.</p><p>Backward still reads both streams for query gradients. Only the trainable action keys and values receive gradients. No concatenated K/V buffer or full attention-score matrix is materialized.</p><div class="method-tags"><span>Separate K/V streams</span><span>Selective backward</span></div></div>
+        <div class="method-visual attention-visual"><div class="visual-topline"><span>ATTENTION, WITH STRUCTURE</span><div class="segmented-control" role="group" aria-label="Attention pass"><button class="active" data-attention="forward" aria-pressed="true">Forward</button><button data-attention="backward" aria-pressed="false">Backward</button></div></div><svg id="attention-svg" viewBox="0 0 520 338" role="img" aria-label="Forward attention: frozen prefix queries read prefix keys; action queries read both frozen prefix and trainable action keys"><defs><pattern id="masked-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line y2="7" stroke="#e0d7cf" stroke-width="1.4"/></pattern></defs><g id="attention-drawing"></g></svg><div class="attention-legend"><span><i class="frozen-key"></i> Frozen context</span><span><i class="trainable-key"></i> Trainable action</span><span><i class="masked-key"></i> Skipped</span></div><p class="diagram-caption attention-explanation" aria-live="polite">Action queries read two K/V streams, tile by tile. Prefix queries only attend to the frozen prefix.</p><span class="concept-note">Conceptual access map; scores are computed in tiles, not stored as this matrix.</span></div>
+      </article>
+      <div class="runtime-note reveal"><span class="small-spark" aria-hidden="true">✳</span><p><strong>Less unused work, across the stack.</strong> Feature-only decoders skip unused language logits. Configurable accumulation, checkpointing, and frozen-weight retention keep the runtime adaptable.</p></div>
+    </section>
+
+    <section class="next-section" id="next" aria-labelledby="next-title"><div class="section-shell"><div class="next-copy reveal"><p class="eyebrow section-index">03 / THE ROAD AHEAD</p><h2 id="next-title">More models.<br><em>More possibilities.</em></h2><p>Three robot foundations are a starting point.<br>The direction is a wider, faster path for embodied AI.</p><a class="button button-primary" href="https://github.com/kja7/somaspeed" target="_blank" rel="noopener noreferrer">Follow the project <span aria-hidden="true">↗</span></a></div><div class="future-visual reveal" aria-hidden="true"><svg viewBox="0 0 470 350"><defs><radialGradient id="future-glow"><stop stop-color="#eac5bd" stop-opacity=".45"/><stop offset="1" stop-color="#eac5bd" stop-opacity="0"/></radialGradient></defs><circle cx="235" cy="175" r="172" fill="url(#future-glow)"/><g fill="none" stroke="#d7b4a9"><circle cx="235" cy="175" r="69"/><circle cx="235" cy="175" r="131" stroke-dasharray="3 8"/><path d="m235 175-128-68m128 68 123-75m-123 75 9 130m-9-130 163 52m-163-52-27-142m27 142L91 249" opacity=".8"/></g><circle cx="235" cy="175" r="33" fill="#fbf6ef" stroke="#d4a194"/><image href="assets/logo.svg" x="211" y="151" width="48" height="48"/><g class="future-node"><rect x="52" y="88" width="110" height="38" rx="19" fill="#fbf8f3" stroke="#d6b3a6"/><text x="107" y="112" text-anchor="middle">MolmoAct2</text></g><g class="future-node" style="animation-delay:-2s"><rect x="298" y="82" width="119" height="38" rx="19" fill="#fbf8f3" stroke="#d6b3a6"/><text x="357" y="106" text-anchor="middle">GR00T N1.7</text></g><g class="future-node" style="animation-delay:-4s"><rect x="209" y="286" width="70" height="38" rx="19" fill="#fbf8f3" stroke="#d6b3a6"/><text x="244" y="310" text-anchor="middle">π0.5</text></g><g fill="#f9efe7" stroke="#d7b3a6" stroke-dasharray="3 4"><circle cx="208" cy="33" r="15"/><circle cx="398" cy="227" r="15"/><circle cx="91" cy="249" r="15"/></g><g fill="#ba8c7c" font-size="16" text-anchor="middle"><text x="208" y="38">+</text><text x="398" y="232">+</text><text x="91" y="254">+</text></g></svg></div><div class="future-directions reveal"><div><span>01</span><h3>A broader model family</h3><p>Extend the adapter approach to more robot foundation models.</p></div><div><span>02</span><h3>A wider performance picture</h3><p>Explore more GPU architectures, mesh sizes, and training configurations.</p></div><div><span>03</span><h3>Beyond samples per second</h3><p>Expand evaluation toward convergence and downstream robot task success.</p></div></div></div></section>
+  </main>
+  <footer class="site-footer section-shell"><a class="brand" href="#top"><img src="assets/logo.svg" width="30" height="30" alt=""><span>soma<span class="brand-light">speed</span></span></a><p>A little less waiting. A lot more learning.</p><div><a href="assets/results.json" download>Results <span aria-hidden="true">↓</span></a><a href="https://github.com/kja7/somaspeed" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a><a href="#top" aria-label="Back to top">↑</a></div></footer>
+</body>
+</html>

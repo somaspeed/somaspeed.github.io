@@ -1,0 +1,38 @@
+# Eight-GPU tuned example: somaspeed.
+output = "artifacts/pi05-somaspeed"
+
+[model]
+name = "pi05"
+path = "data/models/pi05_libero_base"
+dataset = "data/libero_molmo"
+train_expert_only = true
+freeze_vision_encoder = true
+dtype = "float32"
+compile_model = false
+
+[parallel]
+dp_replicate = 2
+dp_shard = 4
+ac = "none"
+reshard = "always"
+retain_frozen = true
+skip_unused_logits = true
+structured_attention = true
+
+[training]
+steps = 30000
+microbatch = 128
+global_batch = 1024
+workers = 4
+preprocess_in_workers = false
+seed = 42
+lr = 2.5e-05
+weight_decay = 0.01
+betas = [0.9, 0.95]
+eps = 1e-08
+warmup_steps = 1000
+clip_grad = 1.0
+precision = "bfloat16"
+optimizer = "dense"
+warmup_measurement = 5
+max_seconds = 7080
