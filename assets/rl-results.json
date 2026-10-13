@@ -1,7 +1,7 @@
 {
   "hardware": {
     "gpus": 4,
-    "gpu": "NVIDIA A40"
+    "gpu": "GPU"
   },
   "task": "Flow-SDE PPO on LIBERO Spatial",
   "measurement": {

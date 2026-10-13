@@ -1,7 +1,7 @@
 {
   "hardware": {
     "gpus": 8,
-    "gpu": "NVIDIA A40",
+    "gpu": "GPU",
     "memory_mib_per_gpu": 46068,
     "single_node": true,
     "allocated_cpu_threads": 48,
