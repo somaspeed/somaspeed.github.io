@@ -238,3 +238,31 @@
 @media (max-width: 600px) {
   .method-section .optimizer-flow > .flow-connector {width: 28px; justify-self: center;}
 }
+
+/* Conventional titles for results and future directions. */
+.results-section #results-title,
+.next-section #next-title {
+  font-family: var(--sans);
+  font-size: 42px;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -.8px;
+  line-height: 1.2;
+}
+.results-section .result-block-heading h3 {
+  font-family: var(--sans);
+  font-size: 28px;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -.45px;
+  line-height: 1.3;
+}
+.results-section .section-index,
+.next-section .section-index {font-size: 11px; margin-bottom: 16px;}
+@media (max-width: 600px) {
+  .results-section #results-title,
+  .next-section #next-title {font-size: 34px;}
+  .results-section .result-block-heading h3 {font-size: 24px; letter-spacing: -.3px;}
+  .results-section .section-index,
+  .next-section .section-index {font-size: 10px;}
+}
