@@ -1,0 +1,74 @@
+{
+  "hardware": {
+    "gpus": 4,
+    "gpu": "NVIDIA A40"
+  },
+  "task": "Flow-SDE PPO on LIBERO Spatial",
+  "measurement": {
+    "seeds": [
+      1234,
+      5678
+    ],
+    "updates_per_run": 8,
+    "warmup_updates_excluded": 2,
+    "new_observation_action_chunks_per_update": 32,
+    "ppo_epochs": 4,
+    "aggregation": "Measured observations divided by measured wall seconds, pooled over both seeds. Includes learner waits and foreground snapshots. Observations counted once."
+  },
+  "models": {
+    "molmoact2": {
+      "name": "MolmoAct2",
+      "baseline": 0.9820658514513243,
+      "somaspeed": 4.21235399376847,
+      "speedup": 4.289278552495575,
+      "trials": [
+        {
+          "seed": 1234,
+          "baseline": 0.9421702849982398,
+          "somaspeed": 4.019832949810557
+        },
+        {
+          "seed": 5678,
+          "baseline": 1.0254895145913665,
+          "somaspeed": 4.424243384638464
+        }
+      ]
+    },
+    "groot": {
+      "name": "GR00T N1.7",
+      "baseline": 1.5293913486609239,
+      "somaspeed": 3.648822556281504,
+      "speedup": 2.3858004424284682,
+      "trials": [
+        {
+          "seed": 1234,
+          "baseline": 1.5228776838290687,
+          "somaspeed": 3.6893015074817206
+        },
+        {
+          "seed": 5678,
+          "baseline": 1.5359609734456796,
+          "somaspeed": 3.6092222334662125
+        }
+      ]
+    },
+    "pi05": {
+      "name": "\u03c00.5",
+      "baseline": 1.343429224292311,
+      "somaspeed": 5.89189830435977,
+      "speedup": 4.385715449552984,
+      "trials": [
+        {
+          "seed": 1234,
+          "baseline": 1.2805148798289578,
+          "somaspeed": 5.798364142171003
+        },
+        {
+          "seed": 5678,
+          "baseline": 1.4128452326828487,
+          "somaspeed": 5.988499565665268
+        }
+      ]
+    }
+  }
+}

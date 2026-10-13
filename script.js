@@ -3,15 +3,10 @@
 (() => {
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  const svgNS = 'http://www.w3.org/2000/svg';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let paused = reducedMotion.matches;
   let selectedModel = 'molmoact2';
   let metric = 'throughput';
-  let meshMode = 'hsdp';
-  let optimizerMode = 'fused';
-  let kernel = 0;
-  let attentionPass = 'forward';
   let chartAnimation = 0;
 
   // Source: somaspeed/results/tuned.json and the corresponding eight-GPU configs.
@@ -64,17 +59,6 @@
     }
   };
 
-  function node(tag, attrs = {}, parent) {
-    const element = document.createElementNS(svgNS, tag);
-    Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
-    if (parent) parent.appendChild(element);
-    return element;
-  }
-  function text(parent, x, y, value, attrs = {}) {
-    const element = node('text', { x, y, 'font-size': 10, ...attrs }, parent);
-    element.textContent = value;
-    return element;
-  }
   function activate(buttons, active, attribute) {
     buttons.forEach(button => {
       const selected = button.dataset[attribute] === active;
@@ -146,7 +130,7 @@
     }
     chartAnimation = requestAnimationFrame(count);
     bars.forEach((bar, i) => { bar.style.width = `${values[i] / max * 100}%`; });
-    $$('.chart-axis span').forEach((label, i) => { label.textContent = `${max / 5 * i}${relative ? '×' : ''}`; });
+    $$('#benchmark-panel .chart-axis span').forEach((label, i) => { label.textContent = `${max / 5 * i}${relative ? '×' : ''}`; });
     $('#chart-model-name').textContent = model.name;
     $('.chart-summary').textContent = `${model.speedup.toFixed(2)}× more samples per second`;
     $('.chart').setAttribute('aria-label', `${model.name} throughput: native ${model.native.toFixed(2)} samples per second; SomaSpeed ${model.soma.toFixed(2)} samples per second; ${model.speedup.toFixed(2)} times faster. Displaying ${relative ? 'relative speed' : 'samples per second'}.`);
@@ -167,7 +151,7 @@
     $('#native-config-link').href = `assets/configs/${selectedModel}-native.toml`;
     $('#soma-config-link').href = `assets/configs/${selectedModel}-somaspeed.toml`;
   }
-  const modelTabs = $$('.result-model');
+  const modelTabs = $$('#results > .result-models .result-model');
   function selectModel(button) {
     selectedModel = button.dataset.model;
     modelTabs.forEach(tab => {
@@ -197,289 +181,278 @@
   }));
   updateChart();
 
-  // GPU mesh: a colored segment denotes the local parameter/state shard.
-  function drawMesh() {
-    const drawing = $('#mesh-drawing');
-    drawing.replaceChildren();
-    const hybrid = meshMode === 'hsdp';
-    const shardCount = hybrid ? 4 : 8;
-    text(drawing, 260, 34, hybrid ? 'REPLICA AXIS ↓   /   SHARD AXIS →' : 'ONE SHARD GROUP ACROSS EIGHT GPUs', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1.3 });
-    for (let row = 0; row < 2; row++) {
-      if (hybrid) node('rect', { x: 35, y: 49 + row * 110, width: 450, height: 95, rx: 9, fill: '#f3e5df', stroke: '#dfc9be', 'stroke-dasharray': '3 4' }, drawing);
-      for (let column = 0; column < 4; column++) {
-        const x = 51 + column * 108;
-        const y = 64 + row * 110;
-        const id = row * 4 + column;
-        node('rect', { x, y, width: 95, height: 66, rx: 6, fill: '#fcf7f3', stroke: '#d8bcb0' }, drawing);
-        text(drawing, x + 13, y + 20, `GPU ${id + 1}`, { 'font-size': 8 });
-        node('circle', { cx: x + 80, cy: y + 17, r: 2.2, fill: '#be8968', class: 'mesh-pulse', style: `animation-delay:-${id * .45}s` }, drawing);
-        const segmentWidth = (69 - (shardCount - 1) * 2) / shardCount;
-        for (let part = 0; part < shardCount; part++) {
-          const local = part === (hybrid ? column : id);
-          node('rect', { x: x + 13 + part * (segmentWidth + 2), y: y + 34, width: segmentWidth, height: 18, rx: 1.3, fill: local ? '#d49389' : '#e9dfd7' }, drawing);
-        }
-        if (column < 3) node('path', { d: `M${x + 95} ${y + 30}h13`, fill: 'none', stroke: '#d5b49a', 'stroke-width': 1.1 }, drawing);
-      }
-    }
-    if (hybrid) {
-      for (let column = 0; column < 4; column++) node('path', { d: `M${98 + column * 108} 144v15`, stroke: '#c7a386', 'stroke-dasharray': '2 3' }, drawing);
-    } else {
-      node('path', { d: 'M470 97h19v110H38v-32', fill: 'none', stroke: '#d5b49a', 'stroke-width': 1.1 }, drawing);
-    }
-    node('rect', { x: 138, y: 282, width: 8, height: 8, rx: 1, fill: '#d49389' }, drawing);
-    text(drawing, 154, 289, 'Local shard', { 'font-size': 8 });
-    node('rect', { x: 271, y: 282, width: 8, height: 8, rx: 1, fill: '#e9dfd7' }, drawing);
-    text(drawing, 287, 289, 'On other GPUs', { 'font-size': 8 });
-    text(drawing, 260, 265, hybrid ? 'π0.5 MEASURED LAYOUT' : 'GR00T N1.7 MEASURED LAYOUT', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
-    $('#mesh-svg').setAttribute('aria-label', hybrid ? 'π0.5 measured layout: two replicated groups of four GPU shards' : 'GR00T N1.7 measured layout: one model spread over eight GPU shards');
-    $('#mesh-caption').textContent = hybrid ? '4 shards × 2 replicas' : '8 shards × 1 replica';
-    $('#mesh-explanation').textContent = hybrid ? 'π0.5 uses two replicas of four shards; MolmoAct2 uses four replicas of two shards. Tiles show shard ownership. Weights are gathered for computation.' : 'GR00T uses one group of eight shards. Tiles show ownership of sharded parameters and state. Weights are gathered for computation.';
-  }
-  const meshButtons = $$('[data-mesh]');
-  meshButtons.forEach(button => button.addEventListener('click', () => { meshMode = button.dataset.mesh; activate(meshButtons, meshMode, 'mesh'); drawMesh(); }));
-  drawMesh();
+  const scalingPlots = {"molmoact2":{"throughput":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"MolmoAct2 SomaSpeed SFT throughput: 1 GPU: 40.08 samples per second, 2 GPU: 75.56 samples per second, 4 GPU: 147.97 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0</text><path d=\"M48 158.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"162.33\" text-anchor=\"end\" class=\"plot-tick\">100</text><path d=\"M48 121.67H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"125.67\" text-anchor=\"end\" class=\"plot-tick\">200</text><path d=\"M48 85.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"89.00\" text-anchor=\"end\" class=\"plot-tick\">300</text><path d=\"M48 48.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"52.33\" text-anchor=\"end\" class=\"plot-tick\">400</text><path d=\"M48 180.306L154.5 167.295L261 140.746L261 195H48Z\" fill=\"#ab5d52\" opacity=\".06\"/><path d=\"M48 180.306L154.5 167.295L261 140.746\" fill=\"none\" stroke=\"#ab5d52\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"180.306\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"48\" y=\"167.306\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">40.08</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"167.295\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"154.5\" y=\"154.295\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">75.56</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"140.746\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"261\" y=\"127.746\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">147.97</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>","relative":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"MolmoAct2 SomaSpeed SFT throughput: 1 GPU: 40.08 samples per second, 2 GPU: 75.56 samples per second, 4 GPU: 147.97 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0×</text><path d=\"M48 157.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"161.50\" text-anchor=\"end\" class=\"plot-tick\">1×</text><path d=\"M48 120.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"124.00\" text-anchor=\"end\" class=\"plot-tick\">2×</text><path d=\"M48 82.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"86.50\" text-anchor=\"end\" class=\"plot-tick\">3×</text><path d=\"M48 45.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"49.00\" text-anchor=\"end\" class=\"plot-tick\">4×</text><path d=\"M48 157.50L154.5 120.00L261 45.00\" fill=\"none\" stroke=\"#c4b9ad\" stroke-dasharray=\"4 5\"/><path d=\"M48 157.500L154.5 124.296L261 56.542L261 195H48Z\" fill=\"#ab5d52\" opacity=\".06\"/><path d=\"M48 157.500L154.5 124.296L261 56.542\" fill=\"none\" stroke=\"#ab5d52\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"157.500\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"48\" y=\"144.500\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">1.00×</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"124.296\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"154.5\" y=\"111.296\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">1.89×</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"56.542\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#ab5d52\" stroke-width=\"2\"/><text x=\"261\" y=\"43.542\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#ab5d52\">3.69×</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>"},"groot":{"throughput":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"GR00T N1.7 SomaSpeed SFT throughput: 1 GPU: 115.44 samples per second, 2 GPU: 221.95 samples per second, 4 GPU: 380.11 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0</text><path d=\"M48 158.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"162.33\" text-anchor=\"end\" class=\"plot-tick\">100</text><path d=\"M48 121.67H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"125.67\" text-anchor=\"end\" class=\"plot-tick\">200</text><path d=\"M48 85.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"89.00\" text-anchor=\"end\" class=\"plot-tick\">300</text><path d=\"M48 48.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"52.33\" text-anchor=\"end\" class=\"plot-tick\">400</text><path d=\"M48 152.673L154.5 113.617L261 55.627L261 195H48Z\" fill=\"#65877d\" opacity=\".06\"/><path d=\"M48 152.673L154.5 113.617L261 55.627\" fill=\"none\" stroke=\"#65877d\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"152.673\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"48\" y=\"139.673\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">115.44</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"113.617\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"154.5\" y=\"100.617\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">221.95</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"55.627\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"261\" y=\"42.627\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">380.11</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>","relative":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"GR00T N1.7 SomaSpeed SFT throughput: 1 GPU: 115.44 samples per second, 2 GPU: 221.95 samples per second, 4 GPU: 380.11 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0×</text><path d=\"M48 157.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"161.50\" text-anchor=\"end\" class=\"plot-tick\">1×</text><path d=\"M48 120.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"124.00\" text-anchor=\"end\" class=\"plot-tick\">2×</text><path d=\"M48 82.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"86.50\" text-anchor=\"end\" class=\"plot-tick\">3×</text><path d=\"M48 45.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"49.00\" text-anchor=\"end\" class=\"plot-tick\">4×</text><path d=\"M48 157.50L154.5 120.00L261 45.00\" fill=\"none\" stroke=\"#c4b9ad\" stroke-dasharray=\"4 5\"/><path d=\"M48 157.500L154.5 122.898L261 71.521L261 195H48Z\" fill=\"#65877d\" opacity=\".06\"/><path d=\"M48 157.500L154.5 122.898L261 71.521\" fill=\"none\" stroke=\"#65877d\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"157.500\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"48\" y=\"144.500\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">1.00×</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"122.898\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"154.5\" y=\"109.898\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">1.92×</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"71.521\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#65877d\" stroke-width=\"2\"/><text x=\"261\" y=\"58.521\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#65877d\">3.29×</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>"},"pi05":{"throughput":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"π0.5 SomaSpeed SFT throughput: 1 GPU: 43.68 samples per second, 2 GPU: 79.92 samples per second, 4 GPU: 154.76 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0</text><path d=\"M48 158.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"162.33\" text-anchor=\"end\" class=\"plot-tick\">100</text><path d=\"M48 121.67H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"125.67\" text-anchor=\"end\" class=\"plot-tick\">200</text><path d=\"M48 85.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"89.00\" text-anchor=\"end\" class=\"plot-tick\">300</text><path d=\"M48 48.33H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"52.33\" text-anchor=\"end\" class=\"plot-tick\">400</text><path d=\"M48 178.986L154.5 165.695L261 138.256L261 195H48Z\" fill=\"#8b769e\" opacity=\".06\"/><path d=\"M48 178.986L154.5 165.695L261 138.256\" fill=\"none\" stroke=\"#8b769e\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"178.986\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"48\" y=\"165.986\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">43.68</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"165.695\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"154.5\" y=\"152.695\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">79.92</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"138.256\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"261\" y=\"125.256\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">154.76</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>","relative":"<svg viewBox=\"0 0 320 242\" role=\"img\" aria-label=\"π0.5 SomaSpeed SFT throughput: 1 GPU: 43.68 samples per second, 2 GPU: 79.92 samples per second, 4 GPU: 154.76 samples per second\"><path d=\"M48 195.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"199.00\" text-anchor=\"end\" class=\"plot-tick\">0×</text><path d=\"M48 157.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"161.50\" text-anchor=\"end\" class=\"plot-tick\">1×</text><path d=\"M48 120.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"124.00\" text-anchor=\"end\" class=\"plot-tick\">2×</text><path d=\"M48 82.50H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"86.50\" text-anchor=\"end\" class=\"plot-tick\">3×</text><path d=\"M48 45.00H280\" stroke=\"#e6ded5\"/><text x=\"36\" y=\"49.00\" text-anchor=\"end\" class=\"plot-tick\">4×</text><path d=\"M48 157.50L154.5 120.00L261 45.00\" fill=\"none\" stroke=\"#c4b9ad\" stroke-dasharray=\"4 5\"/><path d=\"M48 157.500L154.5 126.378L261 62.126L261 195H48Z\" fill=\"#8b769e\" opacity=\".06\"/><path d=\"M48 157.500L154.5 126.378L261 62.126\" fill=\"none\" stroke=\"#8b769e\" stroke-width=\"2.5\"/><circle cx=\"48\" cy=\"157.500\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"48\" y=\"144.500\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">1.00×</text><text x=\"48\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">1 GPU</text><circle cx=\"154.5\" cy=\"126.378\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"154.5\" y=\"113.378\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">1.83×</text><text x=\"154.5\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">2 GPUs</text><circle cx=\"261\" cy=\"62.126\" r=\"4.5\" fill=\"#fdfbf8\" stroke=\"#8b769e\" stroke-width=\"2\"/><text x=\"261\" y=\"49.126\" text-anchor=\"middle\" class=\"plot-value\" fill=\"#8b769e\">3.54×</text><text x=\"261\" y=\"220\" text-anchor=\"middle\" class=\"plot-tick\">4 GPUs</text></svg>"}};
 
-  const kernelDescriptions = [
-    'Tiles read original gradients, divide by microbatch accumulation × data-parallel ranks, and write squared-norm partials. The gradient buffers stay unchanged.',
-    'Tile partials reduce to one squared-norm sum per parameter. An all-reduce then sums these across the shard group, between launches 2 and 3.',
-    'One kernel combines all parameter norms into a global norm and one shared clipping factor, and prepares per-parameter AdamW step scalars.',
-    'The update kernel rereads original gradients, normalizes and clips them, and updates weights, moments, and step counters. Input gradient buffers stay unchanged.'
-  ];
-  function drawOptimizer() {
-    const drawing = $('#optimizer-drawing');
-    drawing.replaceChildren();
-    const fused = optimizerMode === 'fused';
-    const names = fused ? ['Tile norms', 'Reduce', 'Clip factor', 'AdamW'] : ['Norm', 'Global clip', 'Clip gradients', 'AdamW'];
-    const defs = node('defs', {}, drawing);
-    const marker = node('marker', { id: 'optimizer-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 4, markerHeight: 4, orient: 'auto-start-reverse' }, defs);
-    node('path', { d: 'M0 0 10 5 0 10Z', fill: '#ba9384' }, marker);
-    const connect = (d, attrs = {}) => node('path', { d, fill: 'none', stroke: '#cdb2a5', 'stroke-width': 1.1, 'marker-end': 'url(#optimizer-arrow)', ...attrs }, drawing);
-    const box = (x, y, width, height, step, attrs = {}) => node('rect', { x, y, width, height, rx: 4, fill: step === kernel ? '#dda197' : '#ead8cf', stroke: step === kernel ? '#bd8075' : '#d6b9ac', class: 'optimizer-tile', ...attrs }, drawing);
-    text(drawing, 260, 30, fused ? 'FOUR SHARED TRITON LAUNCHES' : 'CONCEPTUAL PER-TENSOR UPDATE', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
-    if (fused) {
-      const columns = [135, 226, 336, 450];
-      const regions = [[96, 78], [190, 72], [304, 66], [410, 80]];
-      names.forEach((name, step) => text(drawing, columns[step], 64, name, { 'text-anchor': 'middle', 'font-size': 8 }));
-      text(drawing, 49, 64, 'Gradients', { 'text-anchor': 'middle', 'font-size': 8 });
-      node('rect', { x: 20, y: 83, width: 58, height: 148, rx: 6, fill: '#f1e7df', stroke: '#d8c4b6', id: 'optimizer-raw-gradients' }, drawing);
-      // Norm statistics flow to one global factor. They are not updated gradients.
-      for (let tensor = 0; tensor < 3; tensor++) {
-        const y = 117 + tensor * 45;
-        text(drawing, 34, y + 3, String.fromCharCode(65 + tensor), { 'font-size': 8 });
-        for (let tile = 0; tile < 3; tile++) node('rect', { x: 45 + tile * 7, y: y - 8, width: 4, height: 16, rx: 1, fill: '#c9b6a6' }, drawing);
-        connect(`M78 ${y}H107`);
-        box(108, y - 13, 54, 26, 0);
-        for (let tile = 0; tile < 3; tile++) node('rect', { x: 117 + tile * 13, y: y - 5, width: 8, height: 10, rx: 1, fill: '#fffaf5', opacity: .7 }, drawing);
-        connect(`M162 ${y}H205`);
-        box(205, y - 10, 42, 20, 1);
-        text(drawing, 226, y + 3, 'sum', { 'text-anchor': 'middle', 'font-size': 7 });
-        connect(`M247 ${y}H279`, { 'marker-end': 'none' });
-        box(422, y - 13, 56, 26, 3);
-        text(drawing, 450, y - 1, 'weights', { 'text-anchor': 'middle', 'font-size': 7 });
-        text(drawing, 450, y + 8, '+ moments', { 'text-anchor': 'middle', 'font-size': 6 });
-        connect(`M396 ${y}H422`);
-        node('circle', { cx: 78, cy: y, r: 2.2, fill: '#b97269', class: 'optimizer-signal', style: `animation-delay:-${tensor * 1.1}s` }, drawing);
-      }
-      connect('M279 117V244H265V267');
-      node('rect', { x: 220, y: 267, width: 139, height: 27, rx: 5, fill: '#f8f0e9', stroke: '#c4a08e', 'stroke-dasharray': '3 3', id: 'optimizer-shard-reduction' }, drawing);
-      text(drawing, 289, 284, 'Shard-axis all-reduce', { 'text-anchor': 'middle', 'font-size': 8 });
-      connect('M336 267V193');
-      box(309, 129, 56, 64, 2, { id: 'optimizer-global-clip' });
-      text(drawing, 337, 146, 'Global norm', { 'text-anchor': 'middle', 'font-size': 7 });
-      text(drawing, 337, 164, 'One clip', { 'text-anchor': 'middle', 'font-size': 9 });
-      text(drawing, 337, 177, 'factor', { 'text-anchor': 'middle', 'font-size': 9 });
-      box(309, 209, 56, 20, 2);
-      text(drawing, 337, 222, 'Step scalars', { 'text-anchor': 'middle', 'font-size': 7 });
-      connect('M365 161H396', { 'marker-end': 'none' });
-      connect('M365 219H396V117', { 'marker-end': 'none', 'stroke-dasharray': '2 3' });
-      connect('M396 117V207', { 'marker-end': 'none' });
-      // dense_adam reads the original gradient buffers again, not the norm sums.
-      connect('M49 231V317H450V239', { stroke: '#a89c90', id: 'optimizer-gradient-reread' });
-      text(drawing, 249, 309, 'Original gradients read again by the update', { 'text-anchor': 'middle', 'font-size': 8 });
-      regions.forEach(([x, width], step) => {
-        node('rect', { x, y: 83, width, height: 156, rx: 7, fill: 'none', stroke: step === kernel ? '#b47b70' : '#c9a59a', 'stroke-width': step === kernel ? 1.6 : 1, 'stroke-dasharray': '3 4', class: 'optimizer-tile' }, drawing);
-        text(drawing, columns[step], 252, `${step + 1} launch`, { 'text-anchor': 'middle', 'font-size': 7 });
-      });
-      text(drawing, 260, 343, 'One shared clip factor; original gradient buffers are unchanged.', { 'text-anchor': 'middle', 'font-size': 8 });
-    } else {
-      const columns = [130, 240, 350, 455];
-      names.forEach((name, step) => text(drawing, columns[step], 64, name, { 'text-anchor': 'middle', 'font-size': 8 }));
-      for (let tensor = 0; tensor < 3; tensor++) {
-        const y = 113 + tensor * 48;
-        text(drawing, 27, y + 4, `Tensor ${String.fromCharCode(65 + tensor)}`, { 'font-size': 8 });
-        box(105, y - 13, 50, 26, -1);
-        box(325, y - 13, 50, 26, -1);
-        box(430, y - 13, 50, 26, -1);
-        connect(`M155 ${y}H185`, { 'marker-end': 'none' });
-        connect(`M185 ${y}V161H213`);
-        connect(`M268 161H296V${y}H325`);
-        connect(`M375 ${y}H430`);
-      }
-      box(213, 129, 55, 64, -1);
-      text(drawing, 240, 154, 'One global', { 'text-anchor': 'middle', 'font-size': 8 });
-      text(drawing, 240, 169, 'clip factor', { 'text-anchor': 'middle', 'font-size': 8 });
-      text(drawing, 260, 276, 'Tensor-level norm, clipping, and parameter-update operations', { 'text-anchor': 'middle', 'font-size': 8 });
-      text(drawing, 260, 297, 'Conceptual baseline; exact launches depend on the upstream trainer', { 'text-anchor': 'middle', 'font-size': 7 });
+  const scalingButtons = $$('[data-scaling-metric]');
+  scalingButtons.forEach(button => button.addEventListener('click', () => {
+    const value = button.dataset.scalingMetric;
+    activate(scalingButtons, value, 'scalingMetric');
+    $$('[data-scaling-model]').forEach(card => {
+      $('.scaling-plot', card).innerHTML = scalingPlots[card.dataset.scalingModel][value];
+    });
+    $('.scaling-axis-note').textContent = value === 'relative'
+      ? 'Throughput relative to each model’s 1-GPU run · GPU counts evenly spaced · dashed line shows ideal scaling'
+      : 'Samples / second · GPU counts evenly spaced · same vertical scale across models';
+  }));
+  const distributionButtons = $$('[data-distribution]');
+  distributionButtons.forEach(button => button.addEventListener('click', () => {
+    activate(distributionButtons, button.dataset.distribution, 'distribution');
+    $$('[data-distribution-panel]').forEach(panel => {
+      panel.hidden = panel.dataset.distributionPanel !== button.dataset.distribution;
+    });
+  }));
+  const contexts = {
+    pi05: {
+      backboneLabel: 'Vision-language prefix', backboneDetail: 'Encode the observation and instruction',
+      contextLabel: 'Prefix keys + values', contextDetail: 'Read as a separate attention stream',
+      queryLabel: 'Action queries, keys + values', queryDetail: 'Project the trainable action tokens',
+      attentionStreamOne: 'Frozen prefix K/V', attentionStreamTwo: 'Trainable action K/V',
+      contextSummary: 'π0.5 · two streams, one attention result.',
+      contextDescription: 'Action queries attend to both frozen prefix and trainable action keys/values. Backward reads both streams for action-query gradients, but computes key/value gradients only for the action stream. The full score matrix and a concatenated K/V buffer are never stored.',
+      contextFootnote: 'The prefix attends within its own context. Its final layer supplies K/V without computing an unused prefix output. Arrows show the action-expert path.'
+    },
+    molmoact2: {
+      backboneLabel: 'Vision-language backbone', backboneDetail: 'Encode the observation and instruction',
+      contextLabel: 'Shared context keys + values', contextDetail: 'Keep one context across flow timesteps',
+      queryLabel: 'Action queries', queryDetail: 'Queries for the sampled flow timesteps',
+      attentionStreamOne: 'Shared context K/V', attentionStreamTwo: 'Read across flow timesteps',
+      contextSummary: 'MolmoAct2 · share context across the action batch.',
+      contextDescription: 'Action queries from multiple flow timesteps attend to the same backbone context. The attention kernel reads that context directly instead of repeating its keys and values for every timestep. Backward computes gradients only for inputs that require them.',
+      contextFootnote: 'The diagram shows the cross-attention path; the action expert also contains its own action processing. The backbone stays frozen in expert fine-tuning.'
+    },
+    groot: {
+      backboneLabel: 'Vision-language backbone', backboneDetail: 'Extract features from images and language',
+      contextLabel: 'Frozen context features', contextDetail: 'Supply features to the action head',
+      queryLabel: 'Action queries + context projections', queryDetail: 'Project actions and context inside the head',
+      attentionStreamOne: 'Projected context K/V', attentionStreamTwo: 'Action queries read context',
+      contextSummary: 'GR00T N1.7 · attend to context without redundant work.',
+      contextDescription: 'The action head cross-attends to frozen backbone features. Shared kernels stream attention tiles, retain compact context masks, and avoid storing a full score matrix. Context projections in the trainable head still receive gradients; the frozen backbone does not.',
+      contextFootnote: 'The diagram shows the cross-attention path. The feature-only language backbone can skip unused vocabulary logits; action-head projections and loss stay model-specific.'
     }
-    $('.kernel-steps').hidden = !fused;
-    $('.kernel-explanation').textContent = fused ? kernelDescriptions[kernel] : 'A conceptual per-tensor update repeats work across parameters. SomaSpeed coordinates dense tensors through four shared launches.';
-    $('#optimizer-svg').setAttribute('aria-label', fused ? `Four shared Triton launches. Squared norm partials reduce per parameter, then across shard GPUs, to one global clip factor. AdamW rereads original gradients and updates weights and moments. Selected launch ${kernel + 1}: ${names[kernel]}.` : 'Conceptual baseline: per-tensor norm statistics combine into one global clip factor, used by tensor-level clipping and AdamW updates.');
-    activate($$('[data-kernel]'), String(kernel), 'kernel');
-  }
-  const optimizerButtons = $$('[data-optimizer]');
-  optimizerButtons.forEach(button => button.addEventListener('click', () => { optimizerMode = button.dataset.optimizer; activate(optimizerButtons, optimizerMode, 'optimizer'); drawOptimizer(); }));
-  $$('[data-kernel]').forEach(button => button.addEventListener('click', () => { kernel = Number(button.dataset.kernel); drawOptimizer(); }));
-  drawOptimizer();
+  };
+  const contextButtons = $$('[data-context]');
+  contextButtons.forEach(button => button.addEventListener('click', () => {
+    activate(contextButtons, button.dataset.context, 'context');
+    Object.entries(contexts[button.dataset.context]).forEach(([key, value]) => {
+      const id = key.replace(/[A-Z]/g, char => '-' + char.toLowerCase());
+      document.getElementById(id).textContent = value;
+    });
+    $('.context-figure').dataset.model = button.dataset.context;
+    drawConnections();
+  }));
 
-  function drawAttention() {
-    const drawing = $('#attention-drawing');
-    drawing.replaceChildren();
-    const backward = attentionPass === 'backward';
-    const x = 186, y = 92, cell = 21, gap = 3;
-    text(drawing, 260, 30, backward ? 'GRADIENTS FOLLOW THE TRAINABLE PATH' : 'TWO STREAMS. ONE ATTENTION OUTPUT.', { 'text-anchor': 'middle', 'font-size': 8, 'letter-spacing': 1 });
-    text(drawing, x + 71, 62, 'Prefix K / V', { 'text-anchor': 'middle', 'font-size': 9 });
-    text(drawing, x + 179, 62, 'Action K / V', { 'text-anchor': 'middle', 'font-size': 9, style: 'fill:#b17468' });
-    node('path', { d: `M${x} 77h140m4 0h69`, stroke: '#d0b499', 'stroke-width': 1 }, drawing);
-    text(drawing, 166, 162, 'Prefix Q', { 'text-anchor': 'end', 'font-size': 9 });
-    text(drawing, 166, 267, 'Action Q', { 'text-anchor': 'end', 'font-size': 9, style: 'fill:#b17468' });
-    for (let row = 0; row < 9; row++) {
-      for (let column = 0; column < 9; column++) {
-        const prefixQ = row < 6;
-        const prefixKV = column < 6;
-        const masked = prefixQ && !prefixKV;
-        const fill = masked ? 'url(#masked-hatch)' : prefixQ ? '#ddd1c6' : prefixKV ? '#e9c6bd' : '#d89b8d';
-        node('rect', { x: x + column * (cell + gap), y: y + row * (cell + gap), width: cell, height: cell, rx: 2, fill, opacity: backward && prefixQ ? .3 : 1, class: 'attention-cell' }, drawing);
-      }
+  function connectionCanvas(id, container) {
+    const svg = document.getElementById(id);
+    const bounds = container.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+    svg.replaceChildren();
+    const ns = 'http://www.w3.org/2000/svg';
+    function element(tag, attributes, parent = svg) {
+      const node = document.createElementNS(ns, tag);
+      Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+      parent.appendChild(node);
+      return node;
     }
-    node('rect', { x, y: y + 6 * (cell + gap), width: 69, height: 45, rx: 3, fill: 'none', stroke: '#af7064', 'stroke-width': 1.5, class: 'attention-scan', id: 'attention-scanner' }, drawing);
-    if (backward) {
-      text(drawing, x + 71, 320, 'read for dQ only', { 'text-anchor': 'middle', 'font-size': 7 });
-      text(drawing, x + 179, 320, 'dQ · dK · dV', { 'text-anchor': 'middle', 'font-size': 7, style: 'fill:#ad7250' });
+    const defs = element('defs', {});
+    ['context', 'gradient'].forEach((name, index) => {
+      const color = index ? '#b17155' : '#b9977d';
+      const marker = element('marker', { id: `${id}-${name}`, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, defs);
+      element('path', { d: 'M1 1L8 5L1 9', fill: 'none', stroke: color, 'stroke-width': 1.5 }, marker);
+    });
+    function box(selector) {
+      const rect = container.querySelector(selector).getBoundingClientRect();
+      return { left: rect.left - bounds.left, right: rect.right - bounds.left, top: rect.top - bounds.top, bottom: rect.bottom - bounds.top, x: rect.left - bounds.left + rect.width / 2, y: rect.top - bounds.top + rect.height / 2 };
+    }
+    function path(d, gradient = false) {
+      element('path', { d, fill: 'none', stroke: gradient ? '#b17155' : '#b9977d', 'stroke-width': 1.3, 'stroke-linejoin': 'round', 'marker-end': `url(#${id}-${gradient ? 'gradient' : 'context'})` });
+    }
+    return { box, path, bounds };
+  }
+  function drawConnections() {
+    const compact = window.matchMedia('(max-width: 600px)').matches;
+    const context = connectionCanvas('context-connections', $('.context-diagram'));
+    const source = context.box('.context-store'), attention = context.box('.attention-core');
+    if (compact) {
+      const rail = attention.left - 9;
+      context.path(`M${source.left} ${source.y}H${rail}V${attention.y}H${attention.left}`);
     } else {
-      text(drawing, 292, 320, 'Online softmax combines streamed tiles', { 'text-anchor': 'middle', 'font-size': 8 });
+      const rail = (source.right + attention.left) / 2;
+      context.path(`M${source.right} ${source.y}H${rail}V${attention.y}H${attention.left}`);
     }
-    $('.attention-explanation').textContent = backward ? 'The query-gradient kernel reads both K/V streams for dQ. A separate kernel computes dK and dV only for trainable action tokens; frozen prefix K/V receive no gradients.' : 'Action queries read prefix then action K/V streams, tile by tile, sharing one online-softmax accumulator. Prefix queries attend only to the prefix. Both token blocks are bidirectional.';
-    $('#attention-svg').setAttribute('aria-label', backward ? 'Backward: prefix queries are frozen. Action-query gradients use both streams. Key and value gradients are computed only for trainable action tokens.' : 'Forward: frozen prefix queries read prefix keys; action queries read both frozen prefix and trainable action keys.');
-  }
-  const attentionButtons = $$('[data-attention]');
-  attentionButtons.forEach(button => button.addEventListener('click', () => { attentionPass = button.dataset.attention; activate(attentionButtons, attentionPass, 'attention'); drawAttention(); }));
-  drawAttention();
+    const loss = context.box('.action-output'), projection = context.box('.action-projection');
+    const backwardRail = loss.right + 9;
+    context.path(`M${loss.right} ${loss.y}H${backwardRail}V${projection.y}H${projection.right}`, true);
 
-  // Native SVG teaser: particles follow paths; a two-link arm follows a pick/place arc.
-  const gpuGroup = $('#hero-gpus');
-  for (let id = 0; id < 8; id++) {
-    const x = 457 + (id % 4) * 52, y = 125 + Math.floor(id / 4) * 54;
-    const group = node('g', { class: 'hero-gpu', style: `animation-delay:-${id * .4}s` }, gpuGroup);
-    node('rect', { x, y, width: 43, height: 41, rx: 5, fill: '#f8ede6', stroke: '#d7b9a9' }, group);
-    node('rect', { x: x + 11, y: y + 9, width: 21, height: 20, rx: 3, fill: '#edd1c5', stroke: '#c79887' }, group);
-    for (let pin = 0; pin < 3; pin++) {
-      node('path', { d: `M${x + 16 + pin * 5} ${y + 5}v4m0 20v4M${x + 7} ${y + 14 + pin * 5}h4m21 0h4`, fill: 'none', stroke: '#c79887', 'stroke-width': 1 }, group);
+    const rl = connectionCanvas('rl-connections', $('.rl-system'));
+    const policy = rl.box('.rollout-policy'), packet = rl.box('.experience-packet');
+    const replay = rl.box('.ppo-replay'), snapshot = rl.box('.head-snapshot');
+    if (window.innerWidth > 800) {
+      const firstRail = (policy.right + packet.left) / 2;
+      rl.path(`M${policy.right} ${policy.y}H${firstRail}V${packet.y}H${packet.left}`);
+      const secondRail = (packet.right + replay.left) / 2;
+      rl.path(`M${packet.right} ${packet.y}H${secondRail}V${replay.y}H${replay.left}`);
+      const returnY = rl.bounds.height - 6;
+      rl.path(`M${snapshot.x} ${snapshot.bottom}V${returnY}H${policy.x}V${policy.bottom}`, true);
     }
-    node('circle', { cx: x + 36, cy: y + 35, r: 1.5, class: 'hero-gpu-led' }, group);
   }
-  const paths = ['a', 'b', 'c', 'd', 'e', 'f'].map(id => $(`#stream-${id}`));
-  const particles = [];
-  paths.forEach((path, index) => {
-    for (let i = 0; i < 3; i++) particles.push({ path, length: path.getTotalLength(), phase: i / 3 + index * .12, speed: index < 3 ? .2 : .38, circle: node('circle', { r: index < 3 ? 2.5 : 2, fill: '#bf7e70', opacity: .7 }, $('#stream-particles')) });
-  });
+  const connectionObserver = new ResizeObserver(drawConnections);
+  connectionObserver.observe($('.context-diagram'));
+  connectionObserver.observe($('.rl-system'));
+  document.fonts.ready.then(drawConnections);
+  drawConnections();
+
+  // The original three-part illustration, with a continuous pick/place cycle.
+  const svgNS = 'http://www.w3.org/2000/svg';
   const teaser = $('.teaser');
-  const compactTeaser = window.matchMedia('(max-width: 600px)');
-  const originalPaths = paths.map(path => path.getAttribute('d'));
-  const stageLabels = $$('.teaser-stage-labels text');
-  const originalLabels = stageLabels.map(label => [label.getAttribute('x'), label.getAttribute('y')]);
-  function arrangeTeaser() {
-    const compact = compactTeaser.matches;
-    $('.teaser-svg').setAttribute('viewBox', compact ? '0 0 600 540' : '0 0 1120 350');
-    const artwork = [$('.observation-art'), $('.teaser-engine'), $('.robot-art')];
-    const transforms = ['translate(20 -20) scale(.85)', 'translate(-259 190)', 'translate(-355 -10) scale(.85)'];
-    artwork.forEach((group, index) => {
-      if (compact) group.setAttribute('transform', transforms[index]);
-      else group.removeAttribute('transform');
-    });
-    const compactPaths = [
-      'M264 94C307 94 159 233 175 326',
-      'M264 148C281 185 130 306 175 365',
-      'M283 187C302 255 130 325 175 404',
-      'M425 326C473 326 466 219 325 151',
-      'M425 365C511 365 528 223 330 177',
-      'M425 404C560 404 580 294 336 204'
-    ];
-    paths.forEach((path, index) => path.setAttribute('d', compact ? compactPaths[index] : originalPaths[index]));
-    particles.forEach(particle => { particle.length = particle.path.getTotalLength(); });
-    const compactLabels = [[183, 226], [300, 508], [441, 255]];
-    stageLabels.forEach((label, index) => {
-      const position = compact ? compactLabels[index] : originalLabels[index];
-      label.setAttribute('x', position[0]); label.setAttribute('y', position[1]);
-    });
-    const grid = $('.teaser-svg > rect');
-    grid.setAttribute('width', compact ? 600 : 1120);
-    grid.setAttribute('height', compact ? 540 : 350);
-  }
-  compactTeaser.addEventListener('change', arrangeTeaser);
-  arrangeTeaser();
   let teaserVisible = true;
-  let attentionVisible = false;
-  if ('IntersectionObserver' in window) {
-    const motionObserver = new IntersectionObserver(entries => entries.forEach(entry => {
-      if (entry.target === teaser) teaserVisible = entry.isIntersecting;
-      else attentionVisible = entry.isIntersecting;
-    }));
-    motionObserver.observe(teaser);
-    motionObserver.observe($('.attention-visual'));
-  }
-  const armShadow = $('#robot-arm-shadow'), arm = $('#robot-arm'), elbow = $('#robot-elbow'), gripper = $('#robot-gripper'), cube = $('#robot-cube');
-  function robotAt(time) {
-    const phase = (time / 8500) % 1;
-    const smooth = x => x * x * (3 - 2 * x);
-    let targetX, targetY, holding = false;
-    if (phase < .2) { const p = smooth(phase / .2); targetX = 954 + 38 * p; targetY = 134 + 47 * p; }
-    else if (phase < .58) { const p = smooth((phase - .2) / .38); targetX = 992 - 64 * p; targetY = 181 - 72 * Math.sin(Math.PI * p); holding = true; }
-    else if (phase < .73) { const p = smooth((phase - .58) / .15); targetX = 928 + 26 * p; targetY = 181 - 47 * p; }
-    else { targetX = 954; targetY = 134; }
-    const bx = 870, by = 201, l1 = 89, l2 = 89;
-    const dx = targetX - bx, dy = targetY - by;
-    const angle2 = Math.acos(Math.max(-1, Math.min(1, (dx * dx + dy * dy - l1 * l1 - l2 * l2) / (2 * l1 * l2))));
-    const angle1 = Math.atan2(dy, dx) - Math.atan2(l2 * Math.sin(angle2), l1 + l2 * Math.cos(angle2));
-    const ex = bx + l1 * Math.cos(angle1), ey = by + l1 * Math.sin(angle1);
-    const d = `M${bx} ${by} ${ex.toFixed(2)} ${ey.toFixed(2)} ${targetX.toFixed(2)} ${targetY.toFixed(2)}`;
-    armShadow.setAttribute('d', d); arm.setAttribute('d', d);
-    elbow.setAttribute('cx', ex); elbow.setAttribute('cy', ey);
-    gripper.setAttribute('transform', `translate(${targetX} ${targetY})`);
-    const cubeX = holding ? targetX : phase >= .58 && phase < .9 ? 928 : 992;
-    const cubeY = holding ? targetY + 27 : 208;
-    cube.setAttribute('transform', `translate(${cubeX} ${cubeY})`);
-  }
-  let activeTime = 0, previousTime = 0, lastScan = -1;
-  function animate(now) {
-    if (previousTime) {
-      const delta = Math.min(now - previousTime, 50);
-      if (!paused && !document.hidden) activeTime += delta;
-    }
-    previousTime = now;
-    if (teaserVisible && !paused && !document.hidden) {
-      particles.forEach(particle => {
-        const fraction = (activeTime / 1000 * particle.speed + particle.phase) % 1;
-        const point = particle.path.getPointAtLength(fraction * particle.length);
-        particle.circle.setAttribute('cx', point.x);
-        particle.circle.setAttribute('cy', point.y);
-        particle.circle.setAttribute('opacity', Math.sin(fraction * Math.PI) * .75);
-      });
-      robotAt(activeTime);
-    }
-    if (attentionVisible && !paused && !document.hidden) {
-      const scan = Math.floor(activeTime / 1800) % 3;
-      if (scan !== lastScan) {
-        const scanner = $('#attention-scanner');
-        if (scanner) scanner.style.transform = `translateX(${scan * 72}px)`;
-        lastScan = scan;
+  const sceneVariants = ['', '-mobile'].map(suffix => {
+    const find = id => document.getElementById(id + suffix);
+    const particles = [];
+    ['a', 'b', 'c', 'd', 'e', 'f', 'g'].forEach((name, index) => {
+      const path = find('stream-' + name);
+      for (let i = 0; i < (index === 6 ? 3 : 2); i++) {
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('r', index === 6 ? 2.3 : 2.7);
+        circle.setAttribute('fill', index === 6 ? '#83946f' : '#b77864');
+        find('stream-particles').appendChild(circle);
+        particles.push({ path, length: path.getTotalLength(), phase: i / (index === 6 ? 3 : 2) + index * .13, speed: index === 6 ? .13 : .24, circle });
       }
-    }
-    requestAnimationFrame(animate);
-  }
-  robotAt(0);
-  particles.forEach(particle => {
-    const point = particle.path.getPointAtLength((particle.phase % 1) * particle.length);
-    particle.circle.setAttribute('cx', point.x); particle.circle.setAttribute('cy', point.y);
+    });
+    return { find, particles };
   });
-  requestAnimationFrame(animate);
+  const ease = t => t * t * (3 - 2 * t);
+  function robotPose(time) {
+    const phase = time / 9200 % 1;
+    let x = 970, y = 112, grip = 18, carrying = false;
+    if (phase < .18) {
+      const t = ease(phase / .18);x += 34 * t;y += 69 * t;
+    } else if (phase < .25) {
+      x = 1004;y = 181;grip = 18 - 4 * ease((phase - .18) / .07);
+    } else if (phase < .58) {
+      const t = ease((phase - .25) / .33);x = 1004 - 66 * t;y = 181 - 73 * Math.sin(Math.PI * t);grip = 14;carrying = true;
+    } else if (phase < .65) {
+      x = 938;y = 181;grip = 14 + 4 * ease((phase - .58) / .07);
+    } else if (phase < .85) {
+      const t = ease((phase - .65) / .2);x = 938 + 32 * t;y = 181 - 69 * t;
+    }
+    const bx = 870, by = 201, length = 89;
+    const dx = x - bx, dy = y - by;
+    const angle2 = Math.acos(Math.max(-1, Math.min(1, (dx * dx + dy * dy - 2 * length * length) / (2 * length * length))));
+    const angle1 = Math.atan2(dy, dx) - Math.atan2(length * Math.sin(angle2), length + length * Math.cos(angle2));
+    const ex = bx + length * Math.cos(angle1), ey = by + length * Math.sin(angle1);
+    let cubeX = carrying ? x : phase >= .58 && phase < .93 ? 938 : 1004;
+    const cubeY = carrying ? y + 27 : 208;
+    const opacity = phase >= .85 && phase < .93 ? 1 - ease((phase - .85) / .08) : phase >= .93 ? ease((phase - .93) / .07) : 1;
+    return { x, y, ex, ey, grip, cubeX, cubeY, opacity };
+  }
+  function renderScene(time) {
+    const pose = robotPose(time);
+    sceneVariants.forEach(({ find, particles }) => {
+      const d = `M870 201 ${pose.ex.toFixed(2)} ${pose.ey.toFixed(2)} ${pose.x.toFixed(2)} ${pose.y.toFixed(2)}`;
+      find('robot-arm').setAttribute('d', d);
+      find('robot-arm-shadow').setAttribute('d', d);
+      ['robot-elbow', 'robot-elbow-inset'].forEach(id => {
+        find(id).setAttribute('cx', pose.ex);find(id).setAttribute('cy', pose.ey);
+      });
+      find('robot-gripper').setAttribute('transform', `translate(${pose.x} ${pose.y})`);
+      find('gripper-left').setAttribute('d', `M-6 5L${-pose.grip} 12v11l3 4`);
+      find('gripper-right').setAttribute('d', `M6 5L${pose.grip} 12v11l-3 4`);
+      find('robot-cube').setAttribute('transform', `translate(${pose.cubeX} ${pose.cubeY})`);
+      find('robot-cube').setAttribute('opacity', pose.opacity);
+      find('observation-scan').setAttribute('transform', `translate(0 ${Math.sin(time / 2300) * 26 + 24})`);
+      particles.forEach(particle => {
+        const fraction = (time / 1000 * particle.speed + particle.phase) % 1;
+        const point = particle.path.getPointAtLength(fraction * particle.length);
+        particle.circle.setAttribute('cx', point.x);particle.circle.setAttribute('cy', point.y);
+        particle.circle.setAttribute('opacity', Math.sin(fraction * Math.PI) * .8);
+      });
+    });
+  }
+  let animationFrame = 0, previousTime = 0, sceneTime = 0;
+  function animateScene(now) {
+    if (previousTime) sceneTime += Math.min(now - previousTime, 50);
+    previousTime = now;
+    renderScene(sceneTime);
+    animationFrame = requestAnimationFrame(animateScene);
+  }
+  function synchronizeScene() {
+    cancelAnimationFrame(animationFrame);
+    previousTime = 0;
+    if (!paused && teaserVisible && !document.hidden) animationFrame = requestAnimationFrame(animateScene);
+  }
+  $('.motion-toggle').addEventListener('click', synchronizeScene);
+  reducedMotion.addEventListener('change', synchronizeScene);
+  document.addEventListener('visibilitychange', synchronizeScene);
+  if ('IntersectionObserver' in window) {
+    const visibilityObserver = new IntersectionObserver(entries => {
+      teaserVisible = entries[0].isIntersecting;
+      synchronizeScene();
+    });
+    visibilityObserver.observe(teaser);
+  }
+  renderScene(0);
+  synchronizeScene();
+
+  const rlBenchmarks = {"molmoact2":{"name":"MolmoAct2","baseline":0.9820658514513243,"somaspeed":4.21235399376847,"speedup":4.289278552495575,"trials":[{"seed":1234,"baseline":0.9421702849982398,"somaspeed":4.019832949810557},{"seed":5678,"baseline":1.0254895145913665,"somaspeed":4.424243384638464}]},"groot":{"name":"GR00T N1.7","baseline":1.5293913486609239,"somaspeed":3.648822556281504,"speedup":2.3858004424284682,"trials":[{"seed":1234,"baseline":1.5228776838290687,"somaspeed":3.6893015074817206},{"seed":5678,"baseline":1.5359609734456796,"somaspeed":3.6092222334662125}]},"pi05":{"name":"π0.5","baseline":1.343429224292311,"somaspeed":5.89189830435977,"speedup":4.385715449552984,"trials":[{"seed":1234,"baseline":1.2805148798289578,"somaspeed":5.798364142171003},{"seed":5678,"baseline":1.4128452326828487,"somaspeed":5.988499565665268}]}};
+
+  let selectedRLModel = 'molmoact2', rlMetric = 'throughput', rlChartAnimation = 0;
+  const rlPanel = document.getElementById('rl-benchmark-panel');
+  function updateRLChart() {
+    const model = rlBenchmarks[selectedRLModel], relative = rlMetric === 'relative';
+    const values = relative ? [1, model.speedup] : [model.baseline, model.somaspeed];
+    const maximum = relative ? 5 : 7.5;
+    const bars = [$('.native-bar', rlPanel), $('.soma-bar', rlPanel)];
+    const labels = bars.map(bar => $('.bar-value', bar));
+    cancelAnimationFrame(rlChartAnimation);
+    const starts = labels.map(label => parseFloat(label.textContent) || 0);
+    const start = performance.now(), duration = reducedMotion.matches || paused ? 0 : 650;
+    function count(now) {
+      const fraction = duration ? Math.min(1, (now - start) / duration) : 1;
+      const eased = 1 - (1 - fraction) ** 3;
+      labels.forEach((label, i) => label.textContent = (starts[i] + (values[i] - starts[i]) * eased).toFixed(2) + (relative ? '×' : ''));
+      if (fraction < 1) rlChartAnimation = requestAnimationFrame(count);
+    }
+    rlChartAnimation = requestAnimationFrame(count);
+    bars.forEach((bar, i) => bar.style.width = `${values[i] / maximum * 100}%`);
+    $$('.chart-axis span', rlPanel).forEach((label, i) => label.textContent = `${maximum / 5 * i}${relative ? '×' : ''}`);
+    $('#rl-chart-model-name').textContent = model.name;
+    $('.chart-summary', rlPanel).textContent = `${model.speedup.toFixed(2)}× more observations per second`;
+    $('.chart', rlPanel).setAttribute('aria-label', `${model.name} RL throughput: Baseline ${model.baseline.toFixed(2)}, SomaSpeed ${model.somaspeed.toFixed(2)} new observations per second; ${model.speedup.toFixed(2)} times faster. Displaying ${relative ? 'relative speed' : 'observations per second'}.`);
+    rlPanel.setAttribute('aria-labelledby', `rl-tab-${selectedRLModel}`);
+    const table = $('#rl-seed-table');table.replaceChildren();
+    model.trials.forEach(trial => {
+      const row = document.createElement('tr');
+      [trial.seed, trial.baseline.toFixed(2), trial.somaspeed.toFixed(2)].forEach((value, index) => {
+        const cell = document.createElement(index ? 'td' : 'th');
+        if (!index) cell.scope = 'row';cell.textContent = value;row.appendChild(cell);
+      });
+      table.appendChild(row);
+    });
+    $('#rl-model-note').hidden = selectedRLModel !== 'molmoact2';
+  }
+  const rlModelTabs = $$('[data-rl-model]');
+  function selectRLModel(button) {
+    selectedRLModel = button.dataset.rlModel;
+    rlModelTabs.forEach(tab => {
+      const selected = tab === button;tab.classList.toggle('selected', selected);
+      tab.setAttribute('aria-selected', String(selected));tab.tabIndex = selected ? 0 : -1;
+    });
+    updateRLChart();
+  }
+  rlModelTabs.forEach((button, index) => {
+    button.addEventListener('click', () => selectRLModel(button));
+    button.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % rlModelTabs.length;
+      if (event.key === 'ArrowLeft') next = (index + rlModelTabs.length - 1) % rlModelTabs.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = rlModelTabs.length - 1;
+      if (next !== undefined) { event.preventDefault();selectRLModel(rlModelTabs[next]);rlModelTabs[next].focus(); }
+    });
+  });
+  const rlMetricButtons = $$('[data-rl-metric]');
+  rlMetricButtons.forEach(button => button.addEventListener('click', () => {
+    rlMetric = button.dataset.rlMetric;activate(rlMetricButtons, rlMetric, 'rlMetric');updateRLChart();
+  }));
+  updateRLChart();
 })();

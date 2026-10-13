@@ -1,0 +1,139 @@
+{
+  "system": "SomaSpeed",
+  "task": "supervised fine-tuning",
+  "measurement": "One trial per GPU count; approximately 480 measured training seconds; fixed batch per GPU; one node.",
+  "models": {
+    "molmoact2": [
+      {
+        "model": "molmoact2",
+        "system": "somaspeed",
+        "gpus": 1.0,
+        "per_gpu_batch": 24.0,
+        "global_batch": 24.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 40.07518293190087,
+        "minimum_samples_per_second": 40.07518293190087,
+        "maximum_samples_per_second": 40.07518293190087,
+        "measured_training_seconds": 480.0486087439931,
+        "efficiency_percent": 100.0
+      },
+      {
+        "model": "molmoact2",
+        "system": "somaspeed",
+        "gpus": 2.0,
+        "per_gpu_batch": 24.0,
+        "global_batch": 48.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 75.55932942376924,
+        "minimum_samples_per_second": 75.55932942376924,
+        "maximum_samples_per_second": 75.55932942376924,
+        "measured_training_seconds": 480.0781862179865,
+        "efficiency_percent": 94.27197070087743
+      },
+      {
+        "model": "molmoact2",
+        "system": "somaspeed",
+        "gpus": 4.0,
+        "per_gpu_batch": 24.0,
+        "global_batch": 96.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 147.9664406020401,
+        "minimum_samples_per_second": 147.9664406020401,
+        "maximum_samples_per_second": 147.9664406020401,
+        "measured_training_seconds": 480.5980513559771,
+        "efficiency_percent": 92.30553036618521
+      }
+    ],
+    "groot": [
+      {
+        "model": "groot",
+        "system": "somaspeed",
+        "gpus": 1.0,
+        "per_gpu_batch": 80.0,
+        "global_batch": 80.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 115.43708017320078,
+        "minimum_samples_per_second": 115.43708017320078,
+        "maximum_samples_per_second": 115.43708017320078,
+        "measured_training_seconds": 480.4081111080013,
+        "efficiency_percent": 99.99999999999999
+      },
+      {
+        "model": "groot",
+        "system": "somaspeed",
+        "gpus": 2.0,
+        "per_gpu_batch": 80.0,
+        "global_batch": 160.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 221.95335086239845,
+        "minimum_samples_per_second": 221.95335086239845,
+        "maximum_samples_per_second": 221.95335086239845,
+        "measured_training_seconds": 480.570089810004,
+        "efficiency_percent": 96.13607279800458
+      },
+      {
+        "model": "groot",
+        "system": "somaspeed",
+        "gpus": 4.0,
+        "per_gpu_batch": 80.0,
+        "global_batch": 320.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 380.1088645711659,
+        "minimum_samples_per_second": 380.1088645711659,
+        "maximum_samples_per_second": 380.1088645711659,
+        "measured_training_seconds": 480.18158640299225,
+        "efficiency_percent": 82.31949041002551
+      }
+    ],
+    "pi05": [
+      {
+        "model": "pi05",
+        "system": "somaspeed",
+        "gpus": 1.0,
+        "per_gpu_batch": 8.0,
+        "global_batch": 8.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 43.675768453896566,
+        "minimum_samples_per_second": 43.675768453896566,
+        "maximum_samples_per_second": 43.675768453896566,
+        "measured_training_seconds": 480.08341834001476,
+        "efficiency_percent": 99.99999999999999
+      },
+      {
+        "model": "pi05",
+        "system": "somaspeed",
+        "gpus": 2.0,
+        "per_gpu_batch": 8.0,
+        "global_batch": 16.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 79.92339908292358,
+        "minimum_samples_per_second": 79.92339908292358,
+        "maximum_samples_per_second": 79.92339908292358,
+        "measured_training_seconds": 480.0086298160022,
+        "efficiency_percent": 91.49627117298397
+      },
+      {
+        "model": "pi05",
+        "system": "somaspeed",
+        "gpus": 4.0,
+        "per_gpu_batch": 8.0,
+        "global_batch": 32.0,
+        "trials": 1.0,
+        "complete": "True",
+        "samples_per_second": 154.7565221316568,
+        "minimum_samples_per_second": 154.7565221316568,
+        "maximum_samples_per_second": 154.7565221316568,
+        "measured_training_seconds": 480.0093297159765,
+        "efficiency_percent": 88.58259832051684
+      }
+    ]
+  }
+}
