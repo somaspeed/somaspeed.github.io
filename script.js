@@ -207,7 +207,7 @@
       contextLabel: 'Prefix keys + values', contextDetail: 'Read as a separate attention stream',
       queryLabel: 'Action queries, keys + values', queryDetail: 'Project the trainable action tokens',
       attentionStreamOne: 'Frozen prefix K/V', attentionStreamTwo: 'Trainable action K/V',
-      contextSummary: 'π0.5 · two streams, one attention result.',
+      contextSummary: 'π0.5: prefix and action attention',
       contextDescription: 'Action queries attend to both frozen prefix and trainable action keys/values. Backward reads both streams for action-query gradients, but computes key/value gradients only for the action stream. The full score matrix and a concatenated K/V buffer are never stored.',
       contextFootnote: 'The prefix attends within its own context. Its final layer supplies K/V without computing an unused prefix output. Arrows show the action-expert path.'
     },
@@ -216,7 +216,7 @@
       contextLabel: 'Shared context keys + values', contextDetail: 'Keep one context across flow timesteps',
       queryLabel: 'Action queries', queryDetail: 'Queries for the sampled flow timesteps',
       attentionStreamOne: 'Shared context K/V', attentionStreamTwo: 'Read across flow timesteps',
-      contextSummary: 'MolmoAct2 · share context across the action batch.',
+      contextSummary: 'MolmoAct2: shared context across flow timesteps',
       contextDescription: 'Action queries from multiple flow timesteps attend to the same backbone context. The attention kernel reads that context directly instead of repeating its keys and values for every timestep. Backward computes gradients only for inputs that require them.',
       contextFootnote: 'The diagram shows the cross-attention path; the action expert also contains its own action processing. The backbone stays frozen in expert fine-tuning.'
     },
@@ -225,7 +225,7 @@
       contextLabel: 'Frozen context features', contextDetail: 'Supply features to the action head',
       queryLabel: 'Action queries + context projections', queryDetail: 'Project actions and context inside the head',
       attentionStreamOne: 'Projected context K/V', attentionStreamTwo: 'Action queries read context',
-      contextSummary: 'GR00T N1.7 · attend to context without redundant work.',
+      contextSummary: 'GR00T N1.7: cross-attention to frozen features',
       contextDescription: 'The action head cross-attends to frozen backbone features. Shared kernels stream attention tiles, retain compact context masks, and avoid storing a full score matrix. Context projections in the trainable head still receive gradients; the frozen backbone does not.',
       contextFootnote: 'The diagram shows the cross-attention path. The feature-only language backbone can skip unused vocabulary logits; action-head projections and loss stay model-specific.'
     }

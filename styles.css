@@ -36,3 +36,205 @@
 @media(min-width:601px){.teaser-svg-mobile{display:none}}
 
 .teaser-svg-mobile .teaser-stage-labels{font-size:14px}.teaser-svg-mobile .feedback-label{font-size:11px}
+
+/* Conventional method headings and readable explanatory prose. */
+.method-section #method-title {
+  font-family: var(--sans);
+  font-size: 42px;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -.8px;
+  line-height: 1.2;
+}
+.method-section .section-index {font-size: 11px; margin-bottom: 16px;}
+.method-prose {max-width: 820px; margin-bottom: 28px;}
+.method-prose p {
+  font-size: 17px;
+  line-height: 1.8;
+  letter-spacing: 0;
+  color: #625a50;
+  margin: 0 0 18px;
+}
+.method-prose p:last-child {margin-bottom: 0;}
+.method-introduction {margin-top: 25px; margin-bottom: 34px;}
+.method-section .method-overview {margin-top: 0; margin-bottom: 58px;}
+.method-section .method-chapter {margin-top: 62px;}
+.method-section .chapter-heading {display: block; margin-bottom: 22px;}
+.method-section .chapter-heading > div {padding-left: 44px;}
+.method-section .chapter-heading h3 {
+  font-family: var(--sans);
+  font-size: 28px;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -.45px;
+  line-height: 1.3;
+  margin: 0;
+}
+.method-section .chapter-number {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  font-style: normal;
+  color: #92725d;
+  top: 8px;
+  right: auto;
+}
+.method-section .figure-header > .figure-kicker {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #625345;
+}
+.method-section .figure-header .segmented-control button {font-size: 12px;}
+.method-section .figure-badge {font-size: 12px;}
+.method-section .figure-footer {align-items: flex-start;}
+.method-section .figure-footer p {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #716253;
+  max-width: 850px;
+}
+.method-section .figure-footer > span {font-size: 12px; white-space: normal;}
+.method-section .context-explanation strong {font-size: 16px; font-weight: 600; color: #725745;}
+.method-section .context-explanation p {font-size: 16px; line-height: 1.8; color: #716253;}
+.method-section .figure-lead strong {font-size: 15px;}
+.method-section .figure-lead > span {font-size: 12px;}
+.method-section .figure-legend {font-size: 12px;}
+.method-section .overview-models span {font-size: 14px;}
+.method-section .overview-adapter .figure-kicker,
+.method-section .overview-runtime .figure-kicker {font-size: 12px; letter-spacing: .5px;}
+.method-section .overview-adapter strong {font-size: 18px;}
+.method-section .overview-adapter p {font-size: 15px; color: #806c59;}
+.method-section .overview-runtime strong {font-size: 17px;}
+.method-section .overview-outputs p {font-size: 14px; line-height: 1.7; color: #806c59;}
+.method-section .overview-outputs span {font-size: 13px;}
+.method-section .replica-heading > span {font-size: 11px;}
+.method-section .replica-heading > strong,
+.method-section .gpu-state > b,
+.method-section .gpu-state > span,
+.method-section .state-strip > i {font-size: 13px;}
+.method-section .replica-communication {font-size: 13px;}
+.method-section .replica-sync {font-size: 13px;}
+.method-section .replica-sync > span:last-child {font-size: 12px;}
+.method-section .distributed-update {font-size: 14px;}
+.method-section .tensor-gpu > b,
+.method-section .tensor-gpu > span,
+.method-section .tensor-gpu > strong,
+.method-section .tensor-backward,
+.method-section .tensor-input > span:last-child,
+.method-section .tensor-output > span:last-child {font-size: 13px;}
+.method-section .tensor-backward > strong {font-size: 14px;}
+.method-section .pipeline-stage > b {font-size: 12px;}
+.method-section .pipeline-stage > div > span {font-size: 14px;}
+.method-section .pipeline-stage small,
+.method-section .pipeline-transfer {font-size: 13px;}
+.method-section .microbatch-schedule {max-width: 760px;}
+.method-section .microbatch-schedule > .figure-kicker {font-size: 11px; letter-spacing: .6px;}
+.method-section .microbatch-schedule > div {grid-template-columns: 80px repeat(6, 1fr);}
+.method-section .microbatch-schedule b,
+.method-section .microbatch-schedule i {font-size: 13px;}
+.method-section .microbatch-schedule p {font-size: 16px; line-height: 1.75; color: #716253;}
+.method-section .region-label {font-size: 11px; line-height: 1.6; letter-spacing: .5px;}
+.method-section .model-block b {font-size: 14px;}
+.method-section .model-block > span {font-size: 13px; line-height: 1.7;}
+.method-section .context-input span,
+.method-section .action-input span {font-size: 12px;}
+.method-section .attention-core > b {font-size: 15px;}
+.method-section .attention-core > div > span,
+.method-section .attention-core > small {font-size: 12px; line-height: 1.7;}
+.method-section .context-bridge .stop-gradient {font-size: 12px; line-height: 1.7;}
+.method-section .gradient-return,
+.method-section .action-output {font-size: 13px;}
+.method-section .optimizer-node h4 {font-size: 15px;}
+.method-section .optimizer-node > p {font-size: 13px; line-height: 1.7;}
+.method-section .optimizer-formula,
+.method-section .gradient-tensors span,
+.method-section .updated-state span {font-size: 13px;}
+.method-section .clip-factor {font-family: var(--sans); font-size: 22px; font-style: normal;}
+.method-section .optimizer-reread strong,
+.method-section .optimizer-reread > span:last-child {font-size: 14px; line-height: 1.7;}
+.method-section .rollout-region .region-label,
+.method-section .learner-region .region-label,
+.method-section .experience-region .region-label {font-size: 11px; line-height: 1.7;}
+.method-section .environment-box > b,
+.method-section .ppo-replay > b,
+.method-section .head-snapshot > b {font-size: 14px;}
+.method-section .environment-box > span,
+.method-section .rollout-policy b,
+.method-section .rollout-policy p,
+.method-section .ppo-replay > span,
+.method-section .ppo-replay p,
+.method-section .head-snapshot > span,
+.method-section .experience-packet > span,
+.method-section .experience-packet > strong,
+.method-section .packet-direction > span:last-child {font-size: 13px; line-height: 1.7;}
+.method-section .experience-packet > b {font-size: 14px;}
+.method-section .policy-feedback strong {font-size: 14px; line-height: 1.7;}
+.method-section .policy-feedback div > span {font-size: 13px; line-height: 1.7;}
+.method-section .feedback-version {font-size: 12px;}
+.method-section .rl-benefits strong {font-size: 15px;}
+.method-section .rl-benefits p {font-size: 16px; line-height: 1.7; color: #716253;}
+@media (max-width: 1100px) {
+  .method-section .figure-header {flex-wrap: wrap;}
+  .method-section .tensor-flow {grid-template-columns: 1fr 22px 1.7fr 22px 1fr;}
+}
+@media (max-width: 800px) {
+  .method-section .figure-header {flex-direction: column; gap: 12px;}
+  .method-section .figure-header .segmented-control {align-self: flex-start;}
+  .method-section .figure-lead strong {max-width: none;}
+  .method-section .tensor-flow {grid-template-columns: 1fr; gap: 15px;}
+  .method-section .tensor-flow > .flow-connector {transform: rotate(90deg); height: 14px;}
+  .method-section .tensor-workers {max-width: 400px; width: 100%; margin: auto;}
+  .method-section .policy-feedback {flex-wrap: wrap;}
+  .method-section .feedback-version {margin-left: 45px;}
+  .method-section .experience-packet > span {white-space: normal;}
+}
+@media (max-width: 600px) {
+  .method-section #method-title {font-size: 34px;}
+  .method-section .section-index {font-size: 10px;}
+  .method-prose {margin-bottom: 24px;}
+  .method-prose p {font-size: 16px; line-height: 1.8; margin-bottom: 17px;}
+  .method-introduction {margin-top: 21px; margin-bottom: 28px;}
+  .method-section .method-overview {margin-bottom: 40px;}
+  .method-section .method-chapter {margin-top: 45px;}
+  .method-section .chapter-heading {margin-bottom: 20px;}
+  .method-section .chapter-heading > div {padding-left: 34px;}
+  .method-section .chapter-heading h3 {font-size: 24px; letter-spacing: -.3px;}
+  .method-section .chapter-number {top: 5px; font-size: 11px;}
+  .method-section .figure-header .segmented-control {width: 100%;}
+  .method-section .distribution-control {display: grid; grid-template-columns: 1fr;}
+  .method-section .distribution-control button {text-align: left; padding: 8px 10px;}
+  .method-section .figure-lead strong {font-size: 14px;}
+  .method-section .figure-footer > span {font-size: 12px;}
+  .method-section .overview-models span {font-size: 12px;}
+  .method-section .overview-runtime strong {font-size: 15px;}
+  .method-section .overview-adapter strong {font-size: 17px;}
+  .method-section .overview-adapter p,
+  .method-section .overview-outputs p {font-size: 14px;}
+  .method-section .microbatch-schedule > div {grid-template-columns: 49px repeat(6, 1fr); gap: 3px;}
+  .method-section .microbatch-schedule b,
+  .method-section .microbatch-schedule i {font-size: 11px;}
+  .method-section .microbatch-schedule i {padding: 7px 2px;}
+  .method-section .microbatch-schedule > .figure-kicker {font-size: 10px;}
+  .method-section .pipeline-transfer {font-size: 0;}
+  .method-section .pipeline-transfer span:first-child:after,
+  .method-section .pipeline-transfer span:last-child:after {font-size: 13px;}
+  .method-section .attention-core > div {flex-direction: column;}
+  .method-section .context-bridge .stop-gradient {font-size: 11px;}
+  .method-section .context-bridge > span:first-child:after {font-size: 12px;}
+  .method-section .action-output {font-size: 13px; gap: 9px;}
+  .method-section .policy-feedback {gap: 7px 10px;}
+  .method-section .feedback-version {margin-left: 34px;}
+}
+.method-section .flow-connector {pointer-events: none;}
+@media (max-width: 800px) {
+  .method-section .tensor-flow > .flow-connector,
+  .method-section .optimizer-flow > .flow-connector:nth-of-type(2) {
+    width: 28px;
+    justify-self: center;
+  }
+}
+@media (max-width: 600px) {
+  .method-section .optimizer-flow > .flow-connector {width: 28px; justify-self: center;}
+}
